@@ -28,6 +28,9 @@ public class Ride {
     private String schedule;
     private boolean active = true;
     private Date createdAt = new Date();
+    private String status;
+
+
 
     @JsonProperty("requests")
     private List<String> requests = new ArrayList<>();

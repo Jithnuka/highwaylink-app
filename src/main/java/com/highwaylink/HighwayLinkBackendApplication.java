@@ -9,5 +9,4 @@ public class HighwayLinkBackendApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(HighwayLinkBackendApplication.class, args);
 	}
-
 }
