@@ -3,7 +3,6 @@ package com.highwaylink.model;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -30,15 +29,12 @@ public class Ride {
     private Date createdAt = new Date();
     private String status;
 
-
-
     @JsonProperty("requests")
     private List<String> requests = new ArrayList<>();
     private List<String> passengers = new ArrayList<>();
     @JsonProperty("acceptedPassengers")
     private List<String> acceptedPassengers = new ArrayList<>();
     private List<String> canceledRequests = new ArrayList<>();   // ids of canceled requests
-
 
     public String getId() {
         return id;
@@ -53,7 +49,6 @@ public class Ride {
     }
 
     public String getOwnerContact() { return ownerContact; }
-
 
     public String getOrigin() {
         return origin;
@@ -106,7 +101,6 @@ public class Ride {
     public List<String> getCanceledRequests() {
         return canceledRequests;
     }
-
 
     public void setId(String id) {
         this.id = id;

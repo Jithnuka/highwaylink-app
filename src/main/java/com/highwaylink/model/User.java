@@ -13,7 +13,6 @@ public class User {
     private String role; // USER, OWNER, ADMIN
     private String phone;
 
-
     // Getters & Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
