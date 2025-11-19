@@ -77,7 +77,6 @@ export default function RideDetails() {
           <p className="mt-3 border-t pt-2 text-gray-600">{ride.description}</p>
         )}
       </div>
-
       <div className="mt-6 text-gray-500 text-sm">
         Created on: {formattedCreatedAt}
       </div>
