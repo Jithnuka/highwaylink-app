@@ -14,7 +14,6 @@ export default function RideCard({ ride, onRequestJoin, isOwnerView = false, cur
       })
     ).values()
   );
-
   // Normalize pending requests
   const pendingRequests = Array.from(
     new Map(
@@ -25,7 +24,6 @@ export default function RideCard({ ride, onRequestJoin, isOwnerView = false, cur
       })
     ).values()
   );
-
   // Determine passenger status for current user
   let passengerStatus = null;
   if (!isOwnerView && currentUserId) {
