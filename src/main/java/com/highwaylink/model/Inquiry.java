@@ -6,16 +6,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "inquiries")
 public class Inquiry {
     @Id
-    private String _id; // <-- this must match MongoDB's _id field
+    private String _id; 
     private String userId;
     private String userName;
     private String userEmail;
     private String subject;
     private String message;
     private boolean resolved;
-
     // Getters and Setters
-    public String getId() { return _id; }          // optional alias for convenience
+    public String getId() { return _id; }        
     public void setId(String _id) { this._id = _id; }
 
     public String getUserId() { return userId; }
