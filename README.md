@@ -1,7 +1,6 @@
 # Highway RideShare Platform
 
-##MERN Project 
-# Frontend - Node Vite
+# Frontend - React Vite
 # Backend - JavaScript
 # Database - MongoDB
 
