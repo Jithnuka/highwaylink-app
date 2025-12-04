@@ -22,17 +22,17 @@ api.interceptors.response.use(
   (error) => {
     // Handle authentication errors
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      // Don't log if it's a user lookup 404 (expected for deleted users)
-      if (!error.config?.url?.includes("/users/")) {
-        console.error("Authentication failed. Please login again.");
-      }
+      const publicEndpoints = ['/rides', '/rides/search', '/rides/public'];
+      const isPublicEndpoint = publicEndpoints.some(endpoint => error.config?.url?.includes(endpoint));
       
-      if (!error.config?.url?.includes("/users/")) {
+      // Don't redirect if it's a public endpoint or user lookup
+      if (!isPublicEndpoint && !error.config?.url?.includes("/users/")) {
+        console.error("Authentication failed. Please login again.");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         
         // Redirect to login page if not already there
-        if (!window.location.pathname.includes("/login")) {
+        if (!window.location.pathname.includes("/login") && !window.location.pathname === "/") {
           window.location.href = "/login";
         }
       }

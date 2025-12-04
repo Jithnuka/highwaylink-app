@@ -76,39 +76,44 @@ export default function Signup() {
     <div className="min-h-screen flex">
       {/* Left Panel - Brand Section */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-500 to-green-500 relative overflow-hidden">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-blue-400 rounded-full opacity-20 blur-3xl"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-green-400 rounded-full opacity-20 blur-3xl"></div>
+        <div className="absolute top-10 left-10 w-64 h-64 bg-blue-400 rounded-full opacity-20 blur-3xl"></div>
+        <div className="absolute bottom-10 right-10 w-64 h-64 bg-green-400 rounded-full opacity-20 blur-3xl"></div>
         
-        <div className="relative z-10 flex flex-col items-center justify-center w-full text-white px-12">
-          <div className="w-48 h-48 bg-blue-400 bg-opacity-30 rounded-full flex items-center justify-center mb-8 backdrop-blur-sm">
-            <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
+        <div className="relative z-10 flex flex-col items-center justify-center w-full text-white px-8">
+          <div className="w-32 h-32 bg-blue-400 bg-opacity-30 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
+            <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
             </svg>
           </div>
-          <h1 className="text-4xl font-bold mb-4">Join HighwayLink</h1>
-          <p className="text-xl text-center mb-8 text-purple-100 max-w-md">
-            Create your account and start booking rides with just a few clicks.
+          <h1 className="text-2xl font-bold mb-2">
+            {role === "OWNER" ? "Become a Driver" : "Join HighwayLink"}
+          </h1>
+          <p className="text-sm text-center mb-4 text-purple-100 max-w-md">
+            {role === "OWNER" 
+              ? "Register your vehicle and start earning by offering rides to passengers."
+              : "Create your account and start booking rides with just a few clicks."
+            }
           </p>
-          <p className="text-lg italic text-blue-100">
-            Simple, Fast, Reliable
+          <p className="text-sm italic text-blue-100">
+            {role === "OWNER" ? "Drive, Earn, Grow" : "Simple, Fast, Reliable"}
           </p>
         </div>
       </div>
 
       {/* Right Panel - Signup Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 p-4 overflow-y-auto">
-        <div className="w-full max-w-md my-8">
-          <div className="bg-white rounded-3xl shadow-lg p-6">
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 p-3 overflow-y-auto">
+        <div className="w-full max-w-md my-4">
+          <div className="bg-white rounded-3xl shadow-lg p-5">
             {/* Header */}
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+            <div className="mb-3">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">
                 Create Account
               </h2>
-              <p className="text-sm text-gray-500">Sign up to start booking rides</p>
+              <p className="text-xs text-gray-500">Sign up to start booking rides</p>
             </div>
 
             {/* Form Fields */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Role Selection */}
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-2">
@@ -118,7 +123,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setRole("USER")}
-                    className={`p-3 border-2 rounded-xl transition-all ${
+                    className={`p-2 border-2 rounded-xl transition-all ${
                       role === "USER"
                         ? "border-blue-600 bg-blue-50"
                         : "border-gray-200 bg-white hover:border-blue-300"
@@ -133,7 +138,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setRole("OWNER")}
-                    className={`p-3 border-2 rounded-xl transition-all ${
+                    className={`p-2 border-2 rounded-xl transition-all ${
                       role === "OWNER"
                         ? "border-blue-600 bg-blue-50"
                         : "border-gray-200 bg-white hover:border-blue-300"
@@ -157,7 +162,7 @@ export default function Signup() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Full Name"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
+                    className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
                   />
                 </div>
               </div>
@@ -175,7 +180,7 @@ export default function Signup() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email Address"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
+                    className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
                   />
                 </div>
               </div>
@@ -193,7 +198,7 @@ export default function Signup() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Phone Number (10-15 digits)"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
+                    className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
                   />
                 </div>
               </div>
@@ -211,7 +216,7 @@ export default function Signup() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password (min 6 characters)"
-                    className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
+                    className="w-full pl-12 pr-12 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
                   />
                   <button
                     type="button"
@@ -225,14 +230,14 @@ export default function Signup() {
 
               {/* Gender Selection - Enhanced Tile Design */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <label className="block text-xs font-semibold text-gray-700 mb-2">
                   Select Gender <span className="text-red-500">*</span>
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => setGender("MALE")}
-                    className={`p-4 border-2 rounded-xl transition-all transform hover:scale-105 ${
+                    className={`p-3 border-2 rounded-xl transition-all transform hover:scale-105 ${
                       gender === "MALE"
                         ? "border-blue-600 bg-blue-50 shadow-md"
                         : "border-gray-200 bg-white hover:border-blue-300 hover:shadow"
@@ -257,7 +262,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setGender("FEMALE")}
-                    className={`p-4 border-2 rounded-xl transition-all transform hover:scale-105 ${
+                    className={`p-3 border-2 rounded-xl transition-all transform hover:scale-105 ${
                       gender === "FEMALE"
                         ? "border-pink-600 bg-pink-50 shadow-md"
                         : "border-gray-200 bg-white hover:border-pink-300 hover:shadow"
@@ -282,7 +287,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setGender("OTHER")}
-                    className={`p-4 border-2 rounded-xl transition-all transform hover:scale-105 ${
+                    className={`p-3 border-2 rounded-xl transition-all transform hover:scale-105 ${
                       gender === "OTHER"
                         ? "border-purple-600 bg-purple-50 shadow-md"
                         : "border-gray-200 bg-white hover:border-purple-300 hover:shadow"
@@ -308,8 +313,8 @@ export default function Signup() {
 
               {/* Vehicle Information - Only for Vehicle Owners */}
               {role === "OWNER" && (
-                <div className="space-y-4 pt-4 border-t-2 border-gray-200">
-                  <div className="flex items-center space-x-2 mb-3">
+                <div className="space-y-3 pt-3 border-t-2 border-gray-200">
+                  <div className="flex items-center space-x-2 mb-2">
                     <Car className="h-5 w-5 text-blue-600" />
                     <p className="text-sm font-semibold text-gray-900">Vehicle Information</p>
                   </div>
@@ -327,7 +332,7 @@ export default function Signup() {
                         value={vehicleNumber}
                         onChange={(e) => setVehicleNumber(e.target.value)}
                         placeholder="e.g., CAB-1234"
-                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
+                        className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
                       />
                     </div>
                   </div>
@@ -344,7 +349,7 @@ export default function Signup() {
                       <select
                         value={vehicleType}
                         onChange={(e) => setVehicleType(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 appearance-none cursor-pointer"
+                        className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 appearance-none cursor-pointer"
                       >
                         <option value="">Select Vehicle Type</option>
                         <option value="Car">🚗 Car</option>
@@ -388,14 +393,14 @@ export default function Signup() {
               <button
                 onClick={handleSubmit}
                 disabled={!agreeTerms || !gender}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-3.5 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-[1.01] active:scale-[0.99] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2.5 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-[1.01] active:scale-[0.99] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 Create Account
               </button>
             </div>
 
             {/* Login Link */}
-            <p className="text-center mt-5 text-xs text-gray-600">
+            <p className="text-center mt-3 text-xs text-gray-600">
               Already have an account?{" "}
               <a href="/login" className="text-blue-600 hover:text-blue-700 font-semibold underline">
                 Login here
