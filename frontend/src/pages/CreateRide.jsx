@@ -47,6 +47,7 @@ export default function CreateRide() {
   };
 
   return (
+    // Create ride button for creating rides
     <div className="max-w-lg mx-auto bg-gray-50 p-8 rounded-xl shadow-lg mt-6">
       <h2 className="text-2xl font-bold mb-5 text-gray-800">Create Ride</h2>
       <form className="space-y-4" onSubmit={submit}>

@@ -23,7 +23,6 @@ export default function Signup() {
       alert(err?.response?.data?.error || "Signup failed");
     }
   };
-
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-4">Sign up</h2>

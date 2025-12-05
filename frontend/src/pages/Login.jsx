@@ -12,14 +12,15 @@ export default function Login() {
   const submit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post("/auth/login", { email, password }); // ✅ use api
+      // check email & password 
+      const res = await api.post("/auth/login", { email, password });
       login(res.data.token, res.data.user);
       nav("/dashboard");
     } catch (err) {
       alert(err?.response?.data?.error || "Login failed");
     }
   };
-
+  
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-4">Log in</h2>

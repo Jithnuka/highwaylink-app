@@ -2,7 +2,6 @@ import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 
 export const AuthContext = createContext();
-
 const API = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 export function AuthProvider({ children }) {
@@ -20,6 +19,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
 
   // Keep axios Authorization header in sync
+  //Authorize the user
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;

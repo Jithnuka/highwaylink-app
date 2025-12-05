@@ -284,7 +284,7 @@ export default function Dashboard() {
 
   const handleSearch = () => fetchRidesAndUsers();
 
-  // ===================== RIDE CARD UI =====================
+  //  RIDE CARD UI 
   const renderRideCard = (ride, isOwnerView = false, showCancelButton = false) => {
     const isCanceled = ride.active === false;
 
@@ -505,7 +505,7 @@ export default function Dashboard() {
 
       {user && (user.role === "OWNER" || user.role === "USER") && <MyInquiries />}
 
-      {/* ================= ADMIN DASHBOARD TOTAL ================= */}
+      {/* ================= ADMIN DASHBOARD Summaraize Section ================= */}
       {user.role === "ADMIN" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           {/* Total Users */}

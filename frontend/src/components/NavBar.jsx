@@ -40,7 +40,7 @@ export default function NavBar() {
           Info & Support
         </Link>
 
-        {/* Auth Buttons */}
+        {/* Auth Buttons - Loggin & Signup */}
         {user ? (
           <>
             <span className="hidden sm:inline ml-2 text-yellow-200 font-medium">
