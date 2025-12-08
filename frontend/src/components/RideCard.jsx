@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-export default function RideCard({ ride, onRequestJoin, isOwnerView = false, currentUserId }) {
+export default function RideCard({ ride, onRequestJoin, onViewMap, isOwnerView = false, currentUserId }) {
   const start = ride.startTime ? new Date(ride.startTime).toLocaleString() : "N/A";
 
   // Normalize approvedPassengers
@@ -14,6 +14,7 @@ export default function RideCard({ ride, onRequestJoin, isOwnerView = false, cur
       })
     ).values()
   );
+
   // Normalize pending requests
   const pendingRequests = Array.from(
     new Map(
@@ -24,6 +25,7 @@ export default function RideCard({ ride, onRequestJoin, isOwnerView = false, cur
       })
     ).values()
   );
+
   // Determine passenger status for current user
   let passengerStatus = null;
   if (!isOwnerView && currentUserId) {
@@ -70,6 +72,18 @@ export default function RideCard({ ride, onRequestJoin, isOwnerView = false, cur
           >
             Details
           </Link>
+
+          {onViewMap && (
+            <button
+              onClick={() => onViewMap(ride)}
+              className="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              Map
+            </button>
+          )}
 
           {/* Passenger actions */}
           {!isOwnerView && !passengerStatus && ride.active && ride.seatsAvailable > 0 && (
