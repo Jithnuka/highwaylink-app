@@ -1,20 +1,23 @@
 package com.highwaylink.model;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "inquiries")
 public class Inquiry {
     @Id
-    private String _id; 
+    private String _id;
     private String userId;
     private String userName;
     private String userEmail;
     private String subject;
     private String message;
     private boolean resolved;
-    // Getters and Setters
-    public String getId() { return _id; }        
+    private LocalDateTime createdAt;
+
+    public String getId() { return _id; }
     public void setId(String _id) { this._id = _id; }
 
     public String getUserId() { return userId; }
@@ -34,4 +37,7 @@ public class Inquiry {
 
     public boolean isResolved() { return resolved; }
     public void setResolved(boolean resolved) { this.resolved = resolved; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
