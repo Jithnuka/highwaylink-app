@@ -1,23 +1,41 @@
-package com.highwaylink.model;
+package com.highwaylink.DTO;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
-@Document(collection = "users")
-public class User {
-    @Id
-    private String id;
+public class SignupRequestDTO {
+    @NotBlank(message = "Name is required")
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
+    
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
     private String email;
+    
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
+    
+    @NotBlank(message = "Role is required")
+    @Pattern(regexp = "OWNER|USER|ADMIN", 
+             message = "Role must be  OWNER, PASSENGER, or ADMIN")
     private String role;
+    
+    @NotBlank(message = "Phone is required")
+    @Pattern(regexp = "^[0-9]{10,15}$", message = "Phone must be 10-15 digits")
     private String phone;
+    
+    @NotBlank(message = "Gender is required")
+    @Pattern(regexp = "MALE|FEMALE|OTHER", message = "Gender must be MALE, FEMALE, or OTHER")
     private String gender;
+    
     private String vehicleNumber;
     private String vehicleType;
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public SignupRequestDTO() {}
+
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

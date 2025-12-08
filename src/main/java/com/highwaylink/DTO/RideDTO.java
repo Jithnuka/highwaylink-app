@@ -1,25 +1,17 @@
-package com.highwaylink.model;
+package com.highwaylink.DTO;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@Document("rides")
-public class Ride {
-
-    @Id
+public class RideDTO {
     private String id;
     private String ownerId;
     private String ownerName;
-    @JsonProperty
     private String ownerContact;
+    private String ownerGender;        // NEW
+    private String ownerVehicleType;   // NEW
+    private String ownerVehicleNumber; // NEW
+    
     private String origin;
     private String destination;
     private Date startTime;
@@ -27,17 +19,16 @@ public class Ride {
     private int totalSeats;
     private double pricePerSeat;
     private String schedule;
-    private boolean active = true;
-    private Date createdAt = new Date();
-    private String status;
+    private boolean active;
+    private Date createdAt;
+    
+    private java.util.List<String> requests;
+    private java.util.List<String> acceptedPassengers;
+    private java.util.List<String> canceledRequests;
 
-    @JsonProperty("requests")
-    private List<String> requests = new ArrayList<>();
-    private List<String> passengers = new ArrayList<>();
-    @JsonProperty("acceptedPassengers")
-    private List<String> acceptedPassengers = new ArrayList<>();
-    private List<String> canceledRequests = new ArrayList<>();
+    public RideDTO() {}
 
+    // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -49,6 +40,16 @@ public class Ride {
 
     public String getOwnerContact() { return ownerContact; }
     public void setOwnerContact(String ownerContact) { this.ownerContact = ownerContact; }
+
+    // NEW GETTERS AND SETTERS
+    public String getOwnerGender() { return ownerGender; }
+    public void setOwnerGender(String ownerGender) { this.ownerGender = ownerGender; }
+
+    public String getOwnerVehicleType() { return ownerVehicleType; }
+    public void setOwnerVehicleType(String ownerVehicleType) { this.ownerVehicleType = ownerVehicleType; }
+
+    public String getOwnerVehicleNumber() { return ownerVehicleNumber; }
+    public void setOwnerVehicleNumber(String ownerVehicleNumber) { this.ownerVehicleNumber = ownerVehicleNumber; }
 
     public String getOrigin() { return origin; }
     public void setOrigin(String origin) { this.origin = origin; }
@@ -77,22 +78,12 @@ public class Ride {
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public java.util.List<String> getRequests() { return requests; }
+    public void setRequests(java.util.List<String> requests) { this.requests = requests; }
 
-    public List<String> getRequests() { return requests; }
-    public void setRequests(List<String> requests) { this.requests = requests; }
+    public java.util.List<String> getAcceptedPassengers() { return acceptedPassengers; }
+    public void setAcceptedPassengers(java.util.List<String> acceptedPassengers) { this.acceptedPassengers = acceptedPassengers; }
 
-    public List<String> getPassengers() { return passengers; }
-    public void setPassengers(List<String> passengers) { this.passengers = passengers; }
-
-    public List<String> getAcceptedPassengers() { return acceptedPassengers; }
-    public void setAcceptedPassengers(List<String> acceptedPassengers) { 
-        this.acceptedPassengers = acceptedPassengers; 
-    }
-
-    public List<String> getCanceledRequests() { return canceledRequests; }
-    public void setCanceledRequests(List<String> canceledRequests) { 
-        this.canceledRequests = canceledRequests; 
-    }
+    public java.util.List<String> getCanceledRequests() { return canceledRequests; }
+    public void setCanceledRequests(java.util.List<String> canceledRequests) { this.canceledRequests = canceledRequests; }
 }

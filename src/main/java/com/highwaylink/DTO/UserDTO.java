@@ -1,20 +1,39 @@
-package com.highwaylink.model;
+package com.highwaylink.DTO;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-@Document(collection = "users")
-public class User {
-    @Id
+public class UserDTO {
     private String id;
     private String name;
     private String email;
-    private String password;
     private String role;
     private String phone;
     private String gender;
+    
+    // Vehicle information (only for vehicle owners)
     private String vehicleNumber;
-    private String vehicleType;
+    private String vehicleType;  
+    public UserDTO() {}
+
+    // Full constructor with all fields
+    public UserDTO(String id, String name, String email, String role, String phone, 
+                   String gender, String vehicleNumber, String vehicleType) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.role = role;
+        this.phone = phone;
+        this.gender = gender;
+        this.vehicleNumber = vehicleNumber;
+        this.vehicleType = vehicleType;
+    }
+
+    // Legacy constructor for backward compatibility (if needed)
+    public UserDTO(String id, String name, String email, String role, String phone) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.role = role;
+        this.phone = phone;
+    }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -25,15 +44,13 @@ public class User {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
 
+    // NEW GETTERS AND SETTERS
     public String getGender() { return gender; }
     public void setGender(String gender) { this.gender = gender; }
 

@@ -1,108 +1,95 @@
 package com.highwaylink.controller;
 
-import com.highwaylink.model.User;
-import com.highwaylink.repository.UserRepository;
-import com.highwaylink.config.JwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import com.highwaylink.DTO.LoginRequestDTO;
+import com.highwaylink.DTO.LoginResponseDTO;
+import com.highwaylink.DTO.SignupRequestDTO;
+import com.highwaylink.DTO.UserDTO;
+import com.highwaylink.config.JwtUtil;
+import com.highwaylink.exception.UnauthorizedException;
+import com.highwaylink.model.User;
+import com.highwaylink.service.AuthService;
+import com.highwaylink.service.UserService;
+import com.highwaylink.util.DTOMapper;
 
+import jakarta.validation.Valid;
 
-@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private AuthService authService;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private DTOMapper dtoMapper;
+
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody User user) {
-        try {
-            Optional<User> existing = userRepository.findByEmail(user.getEmail());
-            if (existing.isPresent()) {
-                return ResponseEntity
-                        .badRequest()
-                        .body(Map.of("error", "Email already in use"));
-            }
+    public ResponseEntity<LoginResponseDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
+        logger.info("Signup request received for email: {}", signupRequest.getEmail());
 
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            if (user.getRole() == null || user.getRole().isEmpty()) {
-                user.setRole("ROLE_OWNER");
+        // Convert DTO to User entity
+        User user = dtoMapper.toUser(signupRequest);
 
-            }
+        // Save user (service handles validation and password encoding)
+        User savedUser = authService.signup(user);
 
-            User saved = userRepository.save(user);
-            return ResponseEntity.ok(Map.of(
-                    "id", saved.getId(),
-                    "email", saved.getEmail(),
-                    "name", saved.getName(),
-                    "role", saved.getRole()
-            ));
+        // Generate JWT token with userId
+        String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole(), savedUser.getId());
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(Map.of("error", "Signup failed"));
-        }
+        // Convert to UserDTO for response
+        UserDTO userDTO = dtoMapper.toUserDTO(savedUser);
+
+        LoginResponseDTO response = new LoginResponseDTO(token, userDTO);
+
+        logger.info("User registered successfully: {} with role: {}", savedUser.getEmail(), savedUser.getRole());
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User loginData) {
-        try {
-            System.out.println("Login attempt for: " + loginData.getEmail());
-            Optional<User> userOpt = userRepository.findByEmail(loginData.getEmail());
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
+        logger.info("Login request received for email: {}", loginRequest.getEmail());
 
-            if (userOpt.isEmpty()) {
-                System.out.println("No user found");
-                return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
-            }
+        // Validate credentials
+        boolean isValid = authService.verifyCredentials(loginRequest.getEmail(), loginRequest.getPassword());
 
-            User user = userOpt.get();
-            System.out.println("User password from DB: " + user.getPassword());
-            boolean matches = passwordEncoder.matches(loginData.getPassword(), user.getPassword());
-            System.out.println("Password match: " + matches);
-
-            if (!matches) {
-                return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
-            }
-
-            String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
-            System.out.println("Token generated successfully: " + token);
-
-            return ResponseEntity.ok(Map.of(
-                    "token", token,
-                    "user", Map.of(
-                            "email", user.getEmail(),
-                            "name", user.getName(),
-                            "role", user.getRole()
-                    )
-            ));
-
-        } catch (Exception e) {
-            e.printStackTrace(); // 🔹 important: show the real exception
-            return ResponseEntity.internalServerError().body(Map.of("error", "Login failed"));
+        if (!isValid) {
+            logger.warn("Failed login attempt for: {}", loginRequest.getEmail());
+            throw new UnauthorizedException("Invalid email or password");
         }
+
+        // Get user details
+        User user = userService.getUserByEmail(loginRequest.getEmail());
+
+        // Generate JWT token with userId
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getId());
+
+        // Convert to UserDTO
+        UserDTO userDTO = dtoMapper.toUserDTO(user);
+
+        LoginResponseDTO response = new LoginResponseDTO(token, userDTO);
+
+        logger.info("User logged in successfully: {}", user.getEmail());
+
+        return ResponseEntity.ok(response);
     }
-
-
-    @GetMapping("/api/test")
-    public ResponseEntity<?> test(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            return ResponseEntity.ok(Map.of("message", "Token received!", "token", token));
-        }
-        return ResponseEntity.ok(Map.of("message", "No token provided"));
-    }
-
 }
