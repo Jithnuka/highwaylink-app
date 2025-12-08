@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import LocationPicker from "../components/LocationPicker";
 
 export default function CreateRide() {
   const [origin, setOrigin] = useState("");
@@ -28,7 +29,7 @@ export default function CreateRide() {
     const startTime = startDateTime.toISOString();
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/rides`, {
+      await api.post("/rides", {
         origin,
         destination,
         startTime,
@@ -42,38 +43,29 @@ export default function CreateRide() {
       nav("/dashboard");
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.message || "Error creating ride");
+      alert(err?.response?.data?.message || err?.response?.data?.error || "Error creating ride");
     }
   };
 
   return (
-    // Create ride button for creating rides
     <div className="max-w-lg mx-auto bg-gray-50 p-8 rounded-xl shadow-lg mt-6">
       <h2 className="text-2xl font-bold mb-5 text-gray-800">Create Ride</h2>
       <form className="space-y-4" onSubmit={submit}>
         {/* Origin */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Origin</label>
-          <input
-            required
-            value={origin}
-            onChange={(e) => setOrigin(e.target.value)}
-            placeholder="Enter starting location"
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-          />
-        </div>
+        <LocationPicker
+          label="Origin"
+          value={origin}
+          onChange={setOrigin}
+          placeholder="Enter starting location or use map"
+        />
 
         {/* Destination */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Destination</label>
-          <input
-            required
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            placeholder="Enter destination"
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-          />
-        </div>
+        <LocationPicker
+          label="Destination"
+          value={destination}
+          onChange={setDestination}
+          placeholder="Enter destination or use map"
+        />
 
         {/* Contact No */}
         <div>
