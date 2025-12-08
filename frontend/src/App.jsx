@@ -7,8 +7,10 @@ import Dashboard from "./pages/Dashboard";
 import CreateRide from "./pages/CreateRide";
 import RideDetails from "./pages/RideDetails";
 import InfoSupport from "./pages/InfoSupport";
+import SearchRides from "./pages/SearchRides";
 import { AuthContext } from "./contexts/AuthContext";
 import NavBar from "./components/NavBar";
+import FloatingChatButton from "./components/FloatingChatButton";
 
 function PrivateRoute({ children }) {
   const { user } = useContext(AuthContext);
@@ -42,6 +44,14 @@ export default function App() {
             }
           />
           <Route
+            path="/search-rides"
+            element={
+              <PrivateRoute>
+                <SearchRides />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/ride/:id"
             element={
               <PrivateRoute>
@@ -51,6 +61,9 @@ export default function App() {
           />
         </Routes>
       </div>
+      
+      {/* Floating Chatbot Button - Available on all pages */}
+      <FloatingChatButton />
     </div>
   );
 }
