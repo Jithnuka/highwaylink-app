@@ -43,7 +43,6 @@ export default function MyInquiries() {
           Refresh
         </button>
       </div>
-
       {loading ? (
         <p className="text-gray-600 text-center">Loading inquiries...</p>
       ) : inquiries.length === 0 ? (

@@ -58,8 +58,6 @@ HighwayLink is a platform that enables vehicle owners to earn extra income durin
 - **Security:** Spring Security with JWT
 - **Build Tool:** Maven
 
-## 🚀 Getting Started
-
 ### Prerequisites
 
 - Node.js (v16 or higher)
@@ -150,7 +148,6 @@ Contributions, issues, and feature requests are welcome!
 For support or inquiries:
 - Email: jithnukaweerasingha@gmail.com
 - Phone: +94 71 683 8139
-
 ---
 
 Made with ❤️ by the HighwayLink Team
