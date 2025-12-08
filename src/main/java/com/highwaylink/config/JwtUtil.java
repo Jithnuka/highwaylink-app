@@ -1,34 +1,45 @@
 package com.highwaylink.config;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+
 @Component
 public class JwtUtil {
 
-    private final String SECRET_KEY = "my_super_secret_key_which_should_be_long_enough";
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
+
+    @Value("${jwt.expiration}")
+    private Long jwtExpiration;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email, String role) {
+    public String generateToken(String email, String role, String userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
+        claims.put("userId", userId);
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -40,15 +51,34 @@ public class JwtUtil {
 
     public String extractUsername(String token) {
         try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody()
-                    .getSubject();
+            return extractClaims(token).getSubject();
         } catch (JwtException e) {
             return null;
         }
+    }
+
+    public String extractUserId(String token) {
+        try {
+            return extractClaims(token).get("userId", String.class);
+        } catch (JwtException e) {
+            return null;
+        }
+    }
+
+    public String extractRole(String token) {
+        try {
+            return extractClaims(token).get("role", String.class);
+        } catch (JwtException e) {
+            return null;
+        }
+    }
+
+    private Claims extractClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     private boolean isTokenExpired(String token) {
@@ -58,12 +88,7 @@ public class JwtUtil {
 
     private Date extractExpiration(String token) {
         try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody()
-                    .getExpiration();
+            return extractClaims(token).getExpiration();
         } catch (JwtException e) {
             return null;
         }
