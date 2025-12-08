@@ -1,9 +1,15 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 
 export default function NavBar() {
   const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center shadow-md">
@@ -23,13 +29,18 @@ export default function NavBar() {
         >
           Home
         </Link>
+        
         {user && (
-          <Link
-            to="/dashboard"
-            className="hover:text-yellow-300 transition-colors font-medium"
-          >
-            Dashboard
-          </Link>
+          <>
+            <Link
+              to="/dashboard"
+              className="hover:text-yellow-300 transition-colors font-medium"
+            >
+              Dashboard
+            </Link>
+            
+            
+          </>
         )}
 
         {/* Always show Info & Support */}
@@ -40,14 +51,14 @@ export default function NavBar() {
           Info & Support
         </Link>
 
-        {/* Auth Buttons - Loggin & Signup */}
+        {/* Auth Buttons */}
         {user ? (
           <>
             <span className="hidden sm:inline ml-2 text-yellow-200 font-medium">
               Hi, {user.name}
             </span>
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="ml-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition duration-200"
             >
               Logout
@@ -61,12 +72,12 @@ export default function NavBar() {
             >
               Login
             </Link>
-            <Link
+            {/*<Link
               to="/signup"
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-800 transition duration-200 font-medium"
             >
               Signup
-            </Link>
+            </Link>*/}
           </>
         )}
       </div>
