@@ -72,3 +72,28 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Make DatePicker icons black and visible */
+.react-datepicker__input-container input {
+  color-scheme: light !important;
+  filter: brightness(1) !important;
+}
+
+.react-datepicker-wrapper input {
+  color-scheme: light !important;
+}
+
+/* Force calendar picker icon to be black */
+input::-webkit-calendar-picker-indicator {
+  filter: invert(0) brightness(0) !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0) brightness(0) !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
