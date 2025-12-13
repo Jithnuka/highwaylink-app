@@ -46,7 +46,7 @@ public class AuthController {
     public ResponseEntity<LoginResponseDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
         logger.info("Signup request received for email: {}", signupRequest.getEmail());
 
-        // Convert DTO to User entity
+    
         User user = dtoMapper.toUser(signupRequest);
 
         // Save user (service handles validation and password encoding)
