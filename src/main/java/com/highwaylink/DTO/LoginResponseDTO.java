@@ -17,3 +17,4 @@ public class LoginResponseDTO {
     public UserDTO getUser() { return user; }
     public void setUser(UserDTO user) { this.user = user; }
 }
+//LoginResponseDTO
