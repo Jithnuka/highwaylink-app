@@ -84,16 +84,6 @@ public class AuthService {
             throw new BadRequestException("Password must be at least 6 characters long");
         }
         
-        // Optional: Add stronger password validation
-        // Pattern uppercase = Pattern.compile("[A-Z]");
-        // Pattern lowercase = Pattern.compile("[a-z]");
-        // Pattern digit = Pattern.compile("[0-9]");
-        // Pattern special = Pattern.compile("[!@#$%^&*(),.?\":{}|<>]");
-        
-        // if (!uppercase.matcher(password).find() || 
-        //     !lowercase.matcher(password).find() || 
-        //     !digit.matcher(password).find()) {
-        //     throw new BadRequestException("Password must contain uppercase, lowercase, and numbers");
-        // }
+      
     }
 }
