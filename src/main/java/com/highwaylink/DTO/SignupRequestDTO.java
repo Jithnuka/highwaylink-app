@@ -61,3 +61,4 @@ public class SignupRequestDTO {
     public String getVehicleType() { return vehicleType; }
     public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }
 }
+//signuRequestDTO
