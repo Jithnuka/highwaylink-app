@@ -1,4 +1,4 @@
-// RideController.java - Complete with all endpoints properly defined
+
 package com.highwaylink.controller;
 
 import java.util.List;
