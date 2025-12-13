@@ -6,15 +6,13 @@ public class UserDTO {
     private String email;
     private String role;
     private String phone;
-    private String gender; // NEW FIELD
-    
-    // Vehicle information (only for vehicle owners)
-    private String vehicleNumber; // NEW FIELD
-    private String vehicleType;   // NEW FIELD
+    private String gender; 
+    private String vehicleNumber; 
+    private String vehicleType;   
 
     public UserDTO() {}
 
-    // Full constructor with all fields
+    
     public UserDTO(String id, String name, String email, String role, String phone, 
                    String gender, String vehicleNumber, String vehicleType) {
         this.id = id;
@@ -27,7 +25,7 @@ public class UserDTO {
         this.vehicleType = vehicleType;
     }
 
-    // Legacy constructor for backward compatibility (if needed)
+    
     public UserDTO(String id, String name, String email, String role, String phone) {
         this.id = id;
         this.name = name;
