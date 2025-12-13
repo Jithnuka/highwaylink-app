@@ -51,9 +51,7 @@ public class UserController {
             Authentication authentication) {
         logger.info("PUT /api/users/{} - Updating user", id);
         
-        // Optional: Add authorization check
-        // String currentUserEmail = authentication.getName();
-        // Can verify if user is updating their own profile or is admin
+       
         
         UserDTO updated = userService.updateUser(id, userUpdate);
         return ResponseEntity.ok(updated);
