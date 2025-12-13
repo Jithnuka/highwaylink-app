@@ -1,4 +1,3 @@
-//JwtFilter
 package com.highwaylink.config;
 
 import java.io.IOException;
