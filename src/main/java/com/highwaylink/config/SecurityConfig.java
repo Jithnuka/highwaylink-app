@@ -1,4 +1,3 @@
-//Security Config
 package com.highwaylink.config;
 
 import java.util.Arrays;
