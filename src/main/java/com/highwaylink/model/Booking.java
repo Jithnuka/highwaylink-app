@@ -14,6 +14,8 @@ public class Booking {
     private String passengerName;
     private int seatsRequested = 1;
     private String status = "PENDING";
+    private String paymentMethod; // "CASH" or "CARD"
+    private String paymentStatus = "PENDING"; // "PENDING", "COMPLETED", "FAILED"
     private Date requestedAt = new Date();
 
     public String getId() { return id; }
@@ -36,4 +38,10 @@ public class Booking {
 
     public Date getRequestedAt() { return requestedAt; }
     public void setRequestedAt(Date requestedAt) { this.requestedAt = requestedAt; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
 }
