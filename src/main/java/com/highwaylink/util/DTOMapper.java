@@ -42,11 +42,11 @@ public class DTOMapper {
         return dto;
     }
 
-    // PassengerDTO from userId - UPDATED to include all user details
+    
 
    
 
-    // Ride to RideDTO (with passenger details AND owner details)
+    
     public RideDTO toRideDTO(Ride ride) {
     if (ride == null) return null;
 
@@ -65,7 +65,7 @@ public class DTOMapper {
     dto.setActive(ride.isActive());
     dto.setCreatedAt(ride.getCreatedAt());
 
-    // NEW: Populate owner details from User entity with proper error handling
+    
     try {
         if (ride.getOwnerId() != null) {
             Optional<User> ownerOpt = userRepository.findById(ride.getOwnerId());
@@ -77,7 +77,7 @@ public class DTOMapper {
             }
         }
     } catch (Exception e) {
-        // Log the error but don't fail the entire mapping
+        
         System.err.println("Warning: Could not fetch owner details for ride " + ride.getId() + ": " + e.getMessage());
     }
 
@@ -99,7 +99,7 @@ public class DTOMapper {
         User user = new User();
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword()); // Will be encoded by service
+        user.setPassword(dto.getPassword()); 
         user.setRole(dto.getRole());
         user.setPhone(dto.getPhone());
         user.setGender(dto.getGender());
@@ -109,7 +109,7 @@ public class DTOMapper {
         return user;
     }
 
-    // RideCreateRequestDTO to Ride
+    
     public Ride toRide(RideCreateRequestDTO dto) {
         if (dto == null) return null;
 
@@ -126,7 +126,7 @@ public class DTOMapper {
         return ride;
     }
 
-    // Update Ride from RideUpdateRequestDTO
+    
     public void updateRideFromDTO(Ride ride, RideUpdateRequestDTO dto) {
         if (dto == null || ride == null) return;
 
