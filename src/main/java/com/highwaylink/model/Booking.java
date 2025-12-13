@@ -14,8 +14,8 @@ public class Booking {
     private String passengerName;
     private int seatsRequested = 1;
     private String status = "PENDING";
-    private String paymentMethod; // "CASH" or "CARD"
-    private String paymentStatus = "PENDING"; // "PENDING", "COMPLETED", "FAILED"
+    private String paymentMethod; 
+    private String paymentStatus = "PENDING"; 
     private Date requestedAt = new Date();
 
     public String getId() { return id; }
