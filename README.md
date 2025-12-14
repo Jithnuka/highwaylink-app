@@ -40,6 +40,16 @@ HighwayLink is a platform that enables vehicle owners to earn extra income durin
 - 📱 Mobile-friendly design
 - 🔔 Status notifications and alerts
 
+### New & Upcoming Features
+- 📍 Map and GPS location picker (coming soon)
+- 🗺️ Interactive map for ride routes
+- 🔔 Push notifications for ride status and updates
+- ⭐ Ratings and reviews for rides and drivers
+- 🗓️ Scheduled and recurring rides
+- 🎁 Promo codes and discounts
+- 📈 Advanced analytics for owners and admins
+- 🏆 Loyalty rewards system (planned)
+
 ## 🛠 Tech Stack
 
 ### Frontend
@@ -57,6 +67,8 @@ HighwayLink is a platform that enables vehicle owners to earn extra income durin
 - **Database:** MongoDB
 - **Security:** Spring Security with JWT
 - **Build Tool:** Maven
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -139,6 +151,15 @@ highwaylink-app-main/
 3. Manage all users, rides, and inquiries
 4. Edit or cancel rides/users as needed
 
+### Payment Methods & Driver Dashboard
+- 💳 **Payment Methods:** Passengers can pay via Cash or Card (Stripe integration). 
+
+- 🧾 **Driver Dashboard:**
+  - View all received payments (cash and card)
+  - See total earnings for today, week, and month
+  - Filter payments by method (cash/card)
+  - Real-time updates on new bookings and payments
+
 ## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome!
@@ -146,8 +167,9 @@ Contributions, issues, and feature requests are welcome!
 ## 📞 Contact
 
 For support or inquiries:
-- Email: jithnukaweerasingha@gmail.com
+- Email: jithnukaweerasingha@gmail.com 
 - Phone: +94 71 683 8139
+
 ---
 
 Made with ❤️ by the HighwayLink Team
