@@ -17,6 +17,8 @@ public class Booking {
     private String paymentMethod; // "CASH" or "CARD"
     private String paymentStatus = "PENDING"; // "PENDING", "COMPLETED", "FAILED"
     private Date requestedAt = new Date();
+    private Date paymentCollectedAt; // When cash was collected or card payment completed
+    private Double amountPaid; // Amount paid by passenger
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -44,4 +46,10 @@ public class Booking {
 
     public String getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public Date getPaymentCollectedAt() { return paymentCollectedAt; }
+    public void setPaymentCollectedAt(Date paymentCollectedAt) { this.paymentCollectedAt = paymentCollectedAt; }
+
+    public Double getAmountPaid() { return amountPaid; }
+    public void setAmountPaid(Double amountPaid) { this.amountPaid = amountPaid; }
 }

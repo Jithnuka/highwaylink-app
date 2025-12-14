@@ -18,6 +18,7 @@ import com.highwaylink.exception.UnauthorizedException;
 import com.highwaylink.model.Ride;
 import com.highwaylink.model.User;
 import com.highwaylink.repository.RideRepository;
+import com.highwaylink.repository.UserRepository;
 import com.highwaylink.util.DTOMapper;
 
 @Service
@@ -27,6 +28,9 @@ public class RideService {
 
     @Autowired
     private RideRepository rideRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private UserService userService;
@@ -240,6 +244,39 @@ public class RideService {
             ride.getAcceptedPassengers().add(passengerId);
             ride.setSeatsAvailable(ride.getSeatsAvailable() - 1);
 
+            // Create a booking entry for this passenger
+            if (ride.getBookings() == null) {
+                ride.setBookings(new java.util.ArrayList<>());
+            }
+            
+            // Check if booking already exists for this passenger
+            boolean bookingExists = ride.getBookings().stream()
+                .anyMatch(b -> b.getPassengerId().equals(passengerId));
+            
+            if (!bookingExists) {
+                com.highwaylink.model.Booking booking = new com.highwaylink.model.Booking();
+                booking.setRideId(rideId);
+                booking.setPassengerId(passengerId);
+                booking.setStatus("APPROVED");
+                booking.setPaymentMethod("CASH"); // Default to CASH, can be updated later
+                booking.setPaymentStatus("PENDING");
+                booking.setSeatsRequested(1);
+                booking.setRequestedAt(new java.util.Date());
+                
+                // Get passenger name
+                try {
+                    com.highwaylink.model.User passenger = userRepository.findById(passengerId).orElse(null);
+                    if (passenger != null) {
+                        booking.setPassengerName(passenger.getName());
+                    }
+                } catch (Exception e) {
+                    logger.warn("Could not fetch passenger name for {}", passengerId);
+                }
+                
+                ride.getBookings().add(booking);
+                logger.info("Created booking entry for passenger {} on ride {}", passengerId, rideId);
+            }
+
             Ride updatedRide = rideRepository.save(ride);
             logger.info("Successfully accepted passenger {} for ride {}", passengerId, rideId);
             return dtoMapper.toRideDTO(updatedRide);
@@ -336,4 +373,89 @@ public class RideService {
         
         rideRepository.deleteById(id);
         logger.info("Successfully deleted ride: {}", id);
-    }}
+    }
+
+    @Transactional
+    public RideDTO markPaymentCollected(String rideId, String passengerId, String ownerId, Double amount) {
+        logger.info("Marking payment collected for ride: {}, passenger: {}, amount: {}", rideId, passengerId, amount);
+        
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ride not found"));
+        
+        if (!ride.getOwnerId().equals(ownerId)) {
+            throw new UnauthorizedException("Only ride owner can mark payment as collected");
+        }
+        
+        // Find and update the booking for this passenger
+        boolean bookingFound = false;
+        for (com.highwaylink.model.Booking booking : ride.getBookings()) {
+            if (booking.getPassengerId().equals(passengerId) && "APPROVED".equals(booking.getStatus())) {
+                booking.setPaymentStatus("COMPLETED");
+                booking.setPaymentCollectedAt(new java.util.Date());
+                booking.setAmountPaid(amount);
+                bookingFound = true;
+                logger.info("Payment marked as collected for booking: passenger {}", passengerId);
+                break;
+            }
+        }
+        
+        if (!bookingFound) {
+            throw new BadRequestException("No approved booking found for this passenger");
+        }
+        
+        Ride updatedRide = rideRepository.save(ride);
+        return dtoMapper.toRideDTO(updatedRide);
+    }
+
+    public java.util.Map<String, Object> getTodayEarnings(String ownerId) {
+        logger.info("Calculating today's earnings for owner: {}", ownerId);
+        
+        // Get all rides owned by this user
+        List<Ride> ownerRides = rideRepository.findByOwnerId(ownerId);
+        
+        // Calculate today's earnings
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.ZoneId zoneId = java.time.ZoneId.systemDefault();
+        
+        double cashEarnings = 0.0;
+        double cardEarnings = 0.0;
+        int cashPaymentsCount = 0;
+        int cardPaymentsCount = 0;
+        
+        for (Ride ride : ownerRides) {
+            for (com.highwaylink.model.Booking booking : ride.getBookings()) {
+                if ("COMPLETED".equals(booking.getPaymentStatus()) && 
+                    booking.getPaymentCollectedAt() != null &&
+                    booking.getAmountPaid() != null) {
+                    
+                    // Check if payment was collected today
+                    java.time.LocalDate paymentDate = booking.getPaymentCollectedAt()
+                            .toInstant().atZone(zoneId).toLocalDate();
+                    
+                    if (paymentDate.equals(today)) {
+                        if ("CASH".equals(booking.getPaymentMethod())) {
+                            cashEarnings += booking.getAmountPaid();
+                            cashPaymentsCount++;
+                        } else if ("CARD".equals(booking.getPaymentMethod())) {
+                            cardEarnings += booking.getAmountPaid();
+                            cardPaymentsCount++;
+                        }
+                    }
+                }
+            }
+        }
+        
+        java.util.Map<String, Object> earnings = new java.util.HashMap<>();
+        earnings.put("cashEarnings", cashEarnings);
+        earnings.put("cardEarnings", cardEarnings);
+        earnings.put("totalEarnings", cashEarnings + cardEarnings);
+        earnings.put("cashPaymentsCount", cashPaymentsCount);
+        earnings.put("cardPaymentsCount", cardPaymentsCount);
+        earnings.put("date", today.toString());
+        
+        logger.info("Today's earnings - Cash: {}, Card: {}, Total: {}", 
+                    cashEarnings, cardEarnings, (cashEarnings + cardEarnings));
+        
+        return earnings;
+    }
+}

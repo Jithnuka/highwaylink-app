@@ -274,7 +274,7 @@ export default function Home() {
                     {!user && (
                       <Link
                         to="/login"
-                        className="block w-full text-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg transition font-medium text-sm"
+                        className="block w-full text-center bg-white-600 hover:bg-blue-700 text-black px-3 py-2 rounded-lg transition font-medium text-sm"
                       >
                         Login to Book
                       </Link>

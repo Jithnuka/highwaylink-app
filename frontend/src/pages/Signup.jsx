@@ -356,8 +356,8 @@ export default function Signup() {
                         <option value="Van">🚐 Van</option>
                         <option value="SUV">🚙 SUV</option>
                         <option value="Bus">🚌 Bus</option>
-                        <option value="Motorcycle">🏍️ Motorcycle</option>
-                        <option value="Other">🚘 Other</option>
+                        {/*<option value="Motorcycle">🏍️ Motorcycle</option>*/}
+                        {/*<option value="Other">🚘 Other</option>*/}
                       </select>
                       <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                         <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -37,6 +37,7 @@ public class Ride {
     @JsonProperty("acceptedPassengers")
     private List<String> acceptedPassengers = new ArrayList<>();
     private List<String> canceledRequests = new ArrayList<>();
+    private List<Booking> bookings = new ArrayList<>();
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -95,4 +96,7 @@ public class Ride {
     public void setCanceledRequests(List<String> canceledRequests) { 
         this.canceledRequests = canceledRequests; 
     }
+
+    public List<Booking> getBookings() { return bookings; }
+    public void setBookings(List<Booking> bookings) { this.bookings = bookings; }
 }

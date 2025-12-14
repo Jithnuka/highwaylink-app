@@ -20,6 +20,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Suppress 404 errors for user lookups that have the silent flag
+    if (error.response?.status === 404 && error.config?.url?.includes("/users/") && error.config?.silentError) {
+      // Silently reject without logging
+      return Promise.reject(error);
+    }
+    
     // Handle authentication errors
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       const publicEndpoints = ['/rides', '/rides/search', '/rides/public'];
@@ -36,11 +42,6 @@ api.interceptors.response.use(
           window.location.href = "/login";
         }
       }
-    }
-    
-    if (error.response?.status === 404 && error.config?.url?.includes("/users/")) {
-      // Return a rejected promise without logging
-      return Promise.reject(error);
     }
     
     return Promise.reject(error);

@@ -125,6 +125,8 @@ Perfect for planning your HighwayLink ride! 🚗`;
 
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       
+      console.log("API Key loaded:", apiKey ? "Yes (length: " + apiKey.length + ")" : "No");
+      
       if (!apiKey) {
         setMessages((prev) => [
           ...prev,
@@ -268,16 +270,17 @@ User question: ${userMessage}`;
       ]);
     } catch (error) {
       console.error("Error generating response:", error);
-      console.error("Error details:", error.message, error.stack);
+      console.error("Error details:", error.message);
+      console.error("Full error:", JSON.stringify(error, null, 2));
       
       let errorMessage = "Sorry, I encountered an error. ";
       
-      if (error.message?.includes("API key")) {
-        errorMessage = "Invalid API key. Please check your Gemini API key in the .env file.";
+      if (error.message?.includes("API_KEY_INVALID") || error.message?.includes("API key not valid")) {
+        errorMessage = "❌ Invalid API key. Please verify your Gemini API key is correct and active at https://aistudio.google.com/app/apikey";
       } else if (error.message?.includes("quota") || error.message?.includes("429")) {
-        errorMessage = "API quota exceeded. Please try again later or check your API limits.";
-      } else if (error.message?.includes("network") || error.message?.includes("fetch")) {
-        errorMessage = "Network error. Please check your internet connection and try again.";
+        errorMessage = "⚠️ API quota exceeded. Please try again later or check your API limits at https://aistudio.google.com/";
+      } else if (error.message?.includes("network") || error.message?.includes("fetch") || error.message?.includes("Failed to fetch")) {
+        errorMessage = "🌐 Network error. Please check:\n1. Your internet connection\n2. API key is valid and active\n3. Try refreshing the page\n\nError: " + error.message;
       } else if (error.message) {
         errorMessage += `Error: ${error.message}`;
       } else {

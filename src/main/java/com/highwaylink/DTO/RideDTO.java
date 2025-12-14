@@ -25,6 +25,7 @@ public class RideDTO {
     private java.util.List<String> requests;
     private java.util.List<String> acceptedPassengers;
     private java.util.List<String> canceledRequests;
+    private java.util.List<com.highwaylink.model.Booking> bookings;
 
     public RideDTO() {}
 
@@ -86,4 +87,7 @@ public class RideDTO {
 
     public java.util.List<String> getCanceledRequests() { return canceledRequests; }
     public void setCanceledRequests(java.util.List<String> canceledRequests) { this.canceledRequests = canceledRequests; }
+
+    public java.util.List<com.highwaylink.model.Booking> getBookings() { return bookings; }
+    public void setBookings(java.util.List<com.highwaylink.model.Booking> bookings) { this.bookings = bookings; }
 }

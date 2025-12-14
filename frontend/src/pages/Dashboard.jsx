@@ -37,6 +37,10 @@ export default function Dashboard() {
   const [selectedRideForPayment, setSelectedRideForPayment] = useState(null);
   const [paymentStatuses, setPaymentStatuses] = useState({}); // Track payment status per ride
 
+  // Earnings states
+  const [todayEarnings, setTodayEarnings] = useState(null);
+  const [earningsLoading, setEarningsLoading] = useState(false);
+
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
@@ -153,7 +157,8 @@ export default function Dashboard() {
               const userId = typeof reqId === "object" ? reqId.id : reqId;
               try {
                 const userRes = await api.get(`/users/${userId}`, {
-                  headers: { Authorization: `Bearer ${token}` }
+                  headers: { Authorization: `Bearer ${token}` },
+                  silentError: true
                 });
                 return { id: userId, name: userRes.data.name, email: userRes.data.email };
               } catch (err) {
@@ -171,7 +176,8 @@ export default function Dashboard() {
               const userId = typeof passengerId === "object" ? passengerId.id : passengerId;
               try {
                 const userRes = await api.get(`/users/${userId}`, {
-                  headers: { Authorization: `Bearer ${token}` }
+                  headers: { Authorization: `Bearer ${token}` },
+                  silentError: true
                 });
                 return { id: userId, name: userRes.data.name, email: userRes.data.email };
               } catch (err) {
@@ -273,7 +279,47 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => { fetchRidesAndUsers(); }, []);
+  useEffect(() => { 
+    fetchRidesAndUsers(); 
+    if (user?.role === "OWNER") {
+      fetchTodayEarnings();
+    }
+  }, []);
+
+  // Fetch today's earnings for vehicle owners
+  const fetchTodayEarnings = async () => {
+    setEarningsLoading(true);
+    try {
+      const res = await api.get("/rides/earnings/today", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTodayEarnings(res.data);
+    } catch (err) {
+      console.error("Failed to fetch earnings:", err);
+    } finally {
+      setEarningsLoading(false);
+    }
+  };
+
+  // Mark cash payment as collected
+  const handleMarkPaymentCollected = async (rideId, passengerId, amount) => {
+    if (!window.confirm(`Confirm you collected Rs ${amount} cash from this passenger?`)) {
+      return;
+    }
+
+    try {
+      await api.post(`/rides/${rideId}/mark-payment-collected/${passengerId}?amount=${amount}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      alert("Payment marked as collected successfully!");
+      fetchRidesAndUsers(); // Refresh rides
+      fetchTodayEarnings(); // Refresh earnings
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.message || "Failed to mark payment as collected");
+    }
+  };
 
   const toggleDetails = (rideId) => {
     if (!rideDetails[rideId]) fetchRideDetails(rideId);
@@ -295,7 +341,8 @@ export default function Dashboard() {
       if (rideData.ownerId) {
         try {
           const ownerRes = await api.get(`/users/${rideData.ownerId}`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
+            silentError: true
           });
           rideData.ownerDetails = ownerRes.data;
         } catch (err) {
@@ -309,7 +356,8 @@ export default function Dashboard() {
           rideData.requests.map(async (reqId) => {
             try {
               const userRes = await api.get(`/users/${reqId}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
+                silentError: true
               });
               return { id: reqId, name: userRes.data.name, email: userRes.data.email };
             } catch (err) {
@@ -329,7 +377,8 @@ export default function Dashboard() {
           rideData.acceptedPassengers.map(async (passengerId) => {
             try {
               const userRes = await api.get(`/users/${passengerId}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
+                silentError: true
               });
               return { id: passengerId, name: userRes.data.name, email: userRes.data.email };
             } catch (err) {
@@ -485,7 +534,8 @@ export default function Dashboard() {
     let ownerDetails = {};
     try {
       const ownerRes = await api.get(`/users/${ride.ownerId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        silentError: true
       });
       ownerDetails = ownerRes.data;
     } catch (err) {
@@ -598,7 +648,7 @@ export default function Dashboard() {
       >
         {isCanceled && (
           <span className="absolute top-4 right-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-            ❌ Canceled
+            Canceled
           </span>
         )}
 
@@ -847,7 +897,7 @@ export default function Dashboard() {
                 <div className="p-3 bg-gray-50 rounded-lg text-center">
                   <p className="text-xs text-gray-500 mb-1">Ride Status</p>
                   <p className={`font-bold ${ride.active ? "text-green-600" : "text-red-600"}`}>
-                    {ride.active ? "✅ Active" : "❌ Canceled"}
+                    {ride.active ? "Active" : "Canceled"}
                   </p>
                 </div>
                 <div className="p-3 bg-gray-50 rounded-lg text-center">
@@ -919,28 +969,80 @@ export default function Dashboard() {
                   </svg>
                   Approved Passengers ({ride.acceptedPassengers.length})
                 </h3>
-                <div className="space-y-2">
-                  {ride.acceptedPassengers.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                          {p.name?.charAt(0).toUpperCase() || "U"}
+                <div className="space-y-3">
+                  {ride.acceptedPassengers.map((p) => {
+                    // Find booking info for this passenger
+                    const booking = ride.bookings?.find(b => b.passengerId === p.id && b.status === "APPROVED");
+                    const paymentCollected = booking?.paymentStatus === "COMPLETED";
+                    const isCashPayment = booking?.paymentMethod === "CASH";
+                    
+                    return (
+                      <div key={p.id} className={`p-4 border-2 rounded-lg ${paymentCollected ? 'bg-green-50 border-green-300' : 'bg-yellow-50 border-yellow-300'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                              {p.name?.charAt(0).toUpperCase() || "U"}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-800">{p.name}</p>
+                              <p className="text-xs text-gray-600">User ID: {p.id}</p>
+                            </div>
+                          </div>
+                          {(user.role === "ADMIN" || ride.ownerId === user.id) && (
+                            <button
+                              onClick={() => handleRemovePassenger(ride.id, p.id)}
+                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 text-sm rounded-lg transition font-medium"
+                            >
+                              Remove
+                            </button>
+                          )}
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-800">{p.name}</p>
-                          <p className="text-xs text-gray-600">User ID: {p.id}</p>
-                        </div>
+                        
+                        {/* Payment Status */}
+                        {booking && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {isCashPayment ? (
+                                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                  </svg>
+                                )}
+                                <span className="text-sm font-medium text-gray-700">
+                                  {isCashPayment ? 'Cash Payment' : 'Card Payment'}: Rs {ride.pricePerSeat}
+                                </span>
+                              </div>
+                              
+                              {paymentCollected ? (
+                                <span className="flex items-center gap-1 text-sm font-semibold text-green-700">
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                  Collected
+                                </span>
+                              ) : isCashPayment && ride.ownerId === user.id ? (
+                                <button
+                                  onClick={() => handleMarkPaymentCollected(ride.id, p.id, ride.pricePerSeat)}
+                                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-sm rounded-lg transition font-medium flex items-center gap-1"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  Mark as Paid
+                                </button>
+                              ) : (
+                                <span className="text-sm font-medium text-yellow-700">Pending Payment</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      {(user.role === "ADMIN" || ride.ownerId === user.id) && (
-                        <button
-                          onClick={() => handleRemovePassenger(ride.id, p.id)}
-                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm rounded-lg transition font-medium"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1073,6 +1175,62 @@ export default function Dashboard() {
 
       {/* OWNER Sections */}
       {user.role === "OWNER" && <>
+        {/* Today's Earnings Dashboard */}
+        {!earningsLoading && todayEarnings && (
+          <div className="bg-white shadow-2xl rounded-2xl p-6 mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Today's Earnings
+              <span className="text-sm text-gray-500 font-normal ml-2">({todayEarnings.date})</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Cash Earnings */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border border-green-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-green-700 font-semibold flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Cash Collected
+                  </span>
+                </div>
+                <div className="text-3xl font-bold text-green-700">Rs {todayEarnings.cashEarnings.toFixed(2)}</div>
+                <div className="text-sm text-green-600 mt-1">{todayEarnings.cashPaymentsCount} payment{todayEarnings.cashPaymentsCount !== 1 ? 's' : ''}</div>
+              </div>
+
+              {/* Card Earnings */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-blue-700 font-semibold flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    Online Payments
+                  </span>
+                </div>
+                <div className="text-3xl font-bold text-blue-700">Rs {todayEarnings.cardEarnings.toFixed(2)}</div>
+                <div className="text-sm text-blue-600 mt-1">{todayEarnings.cardPaymentsCount} payment{todayEarnings.cardPaymentsCount !== 1 ? 's' : ''}</div>
+              </div>
+
+              {/* Total Earnings */}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-purple-700 font-semibold flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    Total Earnings
+                  </span>
+                </div>
+                <div className="text-3xl font-bold text-purple-700">Rs {todayEarnings.totalEarnings.toFixed(2)}</div>
+                <div className="text-sm text-purple-600 mt-1">{todayEarnings.cashPaymentsCount + todayEarnings.cardPaymentsCount} total payment{(todayEarnings.cashPaymentsCount + todayEarnings.cardPaymentsCount) !== 1 ? 's' : ''}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {renderSection("🚗 Created Rides as Owner", createdRides, true)}
         {renderSection("📝 Requested Rides as User", requestedRides, false, true)}
         {renderSection("✅ Approved Rides as User", approvedRides)}

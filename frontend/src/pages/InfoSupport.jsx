@@ -72,23 +72,23 @@ export default function InfoSupport() {
       name: "Jithnuka Weerasinghe",
       role: "Founder & Developer",
       linkedin: "https://www.linkedin.com/in/jithnuka-weerasinghe/",
-      image: "/images/1.png", 
+      image: "",
     },
     {
       name: "Samadhi Anusara",
-      role: "Backend Developer",
+      role: "Developer",
       linkedin: "https://www.linkedin.com/in/samadhi-anusara/",
       image: "", 
     },
     {
       name: "Movindu Anusara",
-      role: "Frontend Developer",
+      role: "Developer",
       linkedin: "https://www.linkedin.com/in/movindu-anusara/",
       image: "", 
     },
     {
       name: "Sandali Sewmini",
-      role: "Frontend Developer",
+      role: "Developer",
       linkedin: "https://www.linkedin.com/in/movindu-anusara/",
       image: "", 
     },
@@ -96,7 +96,7 @@ export default function InfoSupport() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-4 px-2 sm:px-2 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-4 mt-16 mb-8">
+      <div className="max-w-7xl mx-auto space-y-4 mt-1 mb-8">
         <section className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
           <div className="flex items-center justify-center gap-3 mb-6">
             <svg

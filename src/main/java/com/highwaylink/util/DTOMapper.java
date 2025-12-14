@@ -65,10 +65,11 @@ public class DTOMapper {
     dto.setActive(ride.isActive());
     dto.setCreatedAt(ride.getCreatedAt());
     
-    // Include requests, acceptedPassengers, and canceledRequests
+    // Include requests, acceptedPassengers, canceledRequests, and bookings
     dto.setRequests(ride.getRequests());
     dto.setAcceptedPassengers(ride.getAcceptedPassengers());
     dto.setCanceledRequests(ride.getCanceledRequests());
+    dto.setBookings(ride.getBookings());
 
     // NEW: Populate owner details from User entity with proper error handling
     try {

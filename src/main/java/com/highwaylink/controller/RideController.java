@@ -237,4 +237,31 @@ public class RideController {
         rideService.deleteRide(id, userEmail);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/mark-payment-collected/{passengerId}")
+    public ResponseEntity<RideDTO> markPaymentCollected(
+            @PathVariable String id,
+            @PathVariable String passengerId,
+            @RequestParam Double amount,
+            Authentication authentication) {
+        
+        String userEmail = authentication.getName();
+        String ownerId = userService.getUserByEmail(userEmail).getId();
+        
+        logger.info("POST /api/rides/{}/mark-payment-collected/{} - owner: {}, amount: {}", id, passengerId, ownerId, amount);
+        
+        RideDTO ride = rideService.markPaymentCollected(id, passengerId, ownerId, amount);
+        return ResponseEntity.ok(ride);
+    }
+
+    @GetMapping("/earnings/today")
+    public ResponseEntity<java.util.Map<String, Object>> getTodayEarnings(Authentication authentication) {
+        String userEmail = authentication.getName();
+        String ownerId = userService.getUserByEmail(userEmail).getId();
+        
+        logger.info("GET /api/rides/earnings/today - owner: {}", ownerId);
+        
+        java.util.Map<String, Object> earnings = rideService.getTodayEarnings(ownerId);
+        return ResponseEntity.ok(earnings);
+    }
 }

@@ -158,7 +158,7 @@ export default function LocationPicker({ label, value, onChange, placeholder }) 
           placeholder={placeholder}
           className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
         />
-        
+        {/*
         <button
           type="button"
           onClick={getCurrentLocation}
@@ -190,6 +190,7 @@ export default function LocationPicker({ label, value, onChange, placeholder }) 
           </svg>
           <span className="hidden sm:inline">{showMap ? 'Hide' : 'Map'}</span>
         </button>
+        */}
       </div>
 
       {coordinates && (
