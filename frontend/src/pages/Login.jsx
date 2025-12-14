@@ -16,10 +16,16 @@ export default function Login() {
     e.preventDefault();
     try {
       const res = await api.post("/auth/login", { email, password });
-      login(res.data.token, res.data.user);
-      nav("/dashboard");
+      if (res.data && res.data.token && res.data.user) {
+        login(res.data.token, res.data.user);
+        alert(`Welcome back, ${res.data.user.name}!`);
+        nav("/dashboard");
+      } else {
+        alert("Login failed: Invalid response from server");
+      }
     } catch (err) {
-      alert(err?.response?.data?.error || "Login failed");
+      console.error("Login error:", err);
+      alert(err?.response?.data?.message || err?.response?.data?.error || "Login failed. Please check your credentials.");
     }
   };
 
@@ -104,7 +110,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 bg-transparent focus:outline-none"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -125,7 +131,7 @@ export default function Login() {
             {/* Sign up prompt */}
             <p className="text-center mt-6 text-gray-600">
               Don't have an account?{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold transition-colors">
+              <a href="/signup" className="text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                 Sign up
               </a>
             </p>
