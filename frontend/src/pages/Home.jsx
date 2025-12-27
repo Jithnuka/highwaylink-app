@@ -13,7 +13,7 @@ export default function Home() {
   const abortControllerRef = useRef(null);
 
   const fetchRides = async () => {
-    // Cancel previous request if still pending
+    /// Cancel previous request if still pending
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
