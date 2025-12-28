@@ -16,7 +16,7 @@ export default function ReviewModal({ ride, driver, onClose, onReviewSubmitted }
 
     setLoading(true);
     try {
-      // Check if user has already reviewed this ride
+      
       const reviewsRes = await api.get(`/reviews/ride/${ride.id}`);
       const user = JSON.parse(localStorage.getItem("user"));
       const existingReview = reviewsRes.data.find(review => review.reviewerId === user.id);
