@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import api from "../api/axios";
 import { AuthContext } from "../contexts/AuthContext";
 import toast from 'react-hot-toast';
@@ -20,6 +20,7 @@ export default function Home() {
   const [selectedRide, setSelectedRide] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const { user } = useContext(AuthContext);
+  const location = useLocation(); // Re-fetch when clicking home link
   const abortControllerRef = useRef(null);
 
   const fetchRides = async () => {
@@ -58,13 +59,16 @@ export default function Home() {
       });
 
 
-      // Filter to show only available rides (active, not completed/in-progress, and future start time)
+      // Filter to show only available rides (active, not completed/in-progress)
+      // Relaxed time filter: show rides that haven't started yet OR started within the last 2 hours
       const currentTime = new Date();
+      const twoHoursAgo = new Date(currentTime.getTime() - (2 * 60 * 60 * 1000));
+
       const availableRides = (res.data || []).filter(ride =>
         ride.active !== false &&
         ride.status !== "COMPLETED" &&
         ride.status !== "IN_PROGRESS" &&
-        new Date(ride.startTime) > currentTime
+        new Date(ride.startTime) > twoHoursAgo
       );
       setRides(availableRides);
       setLoading(false);
@@ -85,7 +89,7 @@ export default function Home() {
         abortControllerRef.current.abort();
       }
     };
-  }, []);
+  }, [location.pathname]); // Re-run when navigation occurs
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -178,7 +182,6 @@ export default function Home() {
               <option value="car">Car</option>
               <option value="van">Van</option>
               <option value="bus">Bus</option>
-              <option value="bike">Bike</option>
               <option value="truck">Truck</option>
               <option value="other">Other</option>
             </select>

@@ -1,4 +1,3 @@
-//JwtUtil
 package com.highwaylink.config;
 
 import java.nio.charset.StandardCharsets;

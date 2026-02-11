@@ -343,8 +343,9 @@ public class RideService {
 
         // Notify Owner
         try {
-            String msg = "New booking request from "
-                    + (booking.getPassengerName() != null ? booking.getPassengerName() : "a user");
+            String passengerName = (booking.getPassengerName() != null ? booking.getPassengerName() : "a user");
+            String msg = "New booking request from " + passengerName + " " + ride.getOrigin() + " to "
+                    + ride.getDestination();
             notificationService.createNotification(ride.getOwnerId(), msg, "INFO", rideId);
         } catch (Exception e) {
             logger.error("Failed to send notification", e);
@@ -574,10 +575,7 @@ public class RideService {
             throw new UnauthorizedException("Only ride owner can delete the ride");
         }
 
-        // Auto-reschedule if it's a recurring ride being deleted/canceled
-        if ("Daily".equalsIgnoreCase(ride.getSchedule()) || "Weekly".equalsIgnoreCase(ride.getSchedule())) {
-            rescheduleRide(ride);
-        }
+        // Schedule field is kept for historical data but no longer auto-reschedules
 
         rideRepository.deleteById(id);
         logger.info("Successfully deleted ride: {}", id);
@@ -743,6 +741,39 @@ public class RideService {
             throw new BadRequestException("Ride cannot be started from current status: " + ride.getStatus());
         }
 
+        // Check if ride can be started based on scheduled time window
+        // Allow starting: 15 minutes before scheduled time to 30 minutes after
+        // scheduled time
+        if (ride.getStartTime() != null) {
+            java.util.Date now = new java.util.Date();
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+
+            // Calculate earliest allowed start time (15 minutes before scheduled time)
+            cal.setTime(ride.getStartTime());
+            cal.add(java.util.Calendar.MINUTE, -15);
+            java.util.Date earliestStartTime = cal.getTime();
+
+            // Calculate latest allowed start time (30 minutes after scheduled time)
+            cal.setTime(ride.getStartTime());
+            cal.add(java.util.Calendar.MINUTE, 30);
+            java.util.Date latestStartTime = cal.getTime();
+
+            // Check if current time is within the allowed window
+            if (now.before(earliestStartTime)) {
+                throw new BadRequestException(
+                        "Cannot start ride more than 15 minutes before the scheduled time. " +
+                                "Scheduled time: " + ride.getStartTime().toString() + ". " +
+                                "You can start from: " + earliestStartTime.toString());
+            }
+
+            if (now.after(latestStartTime)) {
+                throw new BadRequestException(
+                        "Cannot start ride more than 30 minutes after the scheduled time. " +
+                                "Scheduled time: " + ride.getStartTime().toString() + ". " +
+                                "Latest start time was: " + latestStartTime.toString());
+            }
+        }
+
         // Check if ride has accepted passengers
         if (ride.getAcceptedPassengers() == null || ride.getAcceptedPassengers().isEmpty()) {
             throw new BadRequestException("Cannot start ride without accepted passengers");
@@ -795,13 +826,9 @@ public class RideService {
 
         logger.info("Ride {} marked as COMPLETED. Schedule: '{}'", rideId, ride.getSchedule());
 
-        // Auto-schedule next ride if it's recurring
-        if (ride.getSchedule() != null && !ride.getSchedule().isEmpty()) {
-            logger.info("Attempting to reschedule ride {} with schedule {}", rideId, ride.getSchedule());
-            rescheduleRide(savedRide);
-        } else {
-            logger.info("No recurring schedule found for ride {}", rideId);
-        }
+        // Schedule field is kept for historical data but no longer auto-reschedules
+        logger.info("Ride {} completed. Schedule field ('{}') maintained for records only.", rideId,
+                ride.getSchedule());
 
         // Notify Passengers about ride completion
         if (ride.getAcceptedPassengers() != null) {
@@ -825,7 +852,13 @@ public class RideService {
                 .orElseThrow(() -> new ResourceNotFoundException("Ride not found"));
 
         if (!ride.getOwnerId().equals(ownerId)) {
-            throw new UnauthorizedException("Only the ride owner can cancel the ride");
+            // Check if user is an ADMIN
+            User user = userRepository.findById(ownerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+            if (!"ADMIN".equals(user.getRole())) {
+                throw new UnauthorizedException("Only the ride owner or an admin can cancel the ride");
+            }
         }
 
         // Optional: restriction on cancelling if already started or completed
@@ -854,45 +887,6 @@ public class RideService {
         return dtoMapper.toRideDTO(savedRide);
     }
 
-    private void rescheduleRide(Ride completedRide) {
-        try {
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTime(completedRide.getStartTime());
-            java.util.Date now = new java.util.Date();
-
-            if ("Daily".equalsIgnoreCase(completedRide.getSchedule())) {
-                do {
-                    cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
-                } while (cal.getTime().before(now)); // Ensure future date
-            } else if ("Weekly".equalsIgnoreCase(completedRide.getSchedule())) {
-                do {
-                    cal.add(java.util.Calendar.DAY_OF_MONTH, 7);
-                } while (cal.getTime().before(now)); // Ensure future date
-            } else {
-                return; // Not a recognized recurring schedule
-            }
-
-            // Create new ride
-            Ride newRide = new Ride();
-            newRide.setOwnerId(completedRide.getOwnerId());
-            newRide.setOwnerName(completedRide.getOwnerName());
-            newRide.setOwnerContact(completedRide.getOwnerContact());
-            newRide.setOrigin(completedRide.getOrigin());
-            newRide.setDestination(completedRide.getDestination());
-            newRide.setStartTime(cal.getTime());
-            newRide.setTotalSeats(completedRide.getTotalSeats());
-            newRide.setSeatsAvailable(completedRide.getTotalSeats()); // Reset seats
-            newRide.setPricePerSeat(completedRide.getPricePerSeat());
-            newRide.setSchedule(completedRide.getSchedule()); // Keep schedule for future recursion
-            newRide.setStatus("SCHEDULED");
-            newRide.setActive(true);
-            newRide.setCreatedAt(new java.util.Date());
-
-            Ride savedNewRide = rideRepository.save(newRide);
-            logger.info("Auto-scheduled new ride {} for date {}", savedNewRide.getId(), newRide.getStartTime());
-
-        } catch (Exception e) {
-            logger.error("Failed to auto-reschedule ride {}: {}", completedRide.getId(), e.getMessage());
-        }
-    }
+    // REMOVED: rescheduleRide method - daily/weekly auto-scheduling feature removed
+    // for safety
 }

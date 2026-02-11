@@ -19,7 +19,7 @@ public class SignupRequestDTO {
     private String password;
 
     @NotBlank(message = "Role is required")
-    @Pattern(regexp = "OWNER|PASSENGER|ADMIN", message = "Role must be OWNER, PASSENGER, or ADMIN")
+    @Pattern(regexp = "OWNER|USER|ADMIN", message = "Role must be OWNER, USER, or ADMIN")
     private String role;
 
     @NotBlank(message = "Phone is required")

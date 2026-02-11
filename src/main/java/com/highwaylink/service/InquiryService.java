@@ -18,6 +18,12 @@ public class InquiryService {
     private static final Logger logger = LoggerFactory.getLogger(InquiryService.class);
 
     @Autowired
+    private com.highwaylink.repository.UserRepository userRepository;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
     private InquiryRepository inquiryRepository;
 
     @Transactional
@@ -28,6 +34,21 @@ public class InquiryService {
         }
         Inquiry saved = inquiryRepository.save(inquiry);
         logger.info("Inquiry created with id: {}", saved.getId());
+
+        // Notify Admins
+        try {
+            List<com.highwaylink.model.User> admins = userRepository.findByRole("ADMIN");
+            for (com.highwaylink.model.User admin : admins) {
+                notificationService.createNotification(
+                        admin.getId(),
+                        "New Inquiry from " + inquiry.getUserName() + ": " + inquiry.getSubject(),
+                        "INFO",
+                        saved.getId());
+            }
+        } catch (Exception e) {
+            logger.error("Failed to notify admins about new inquiry", e);
+        }
+
         return saved;
     }
 
@@ -57,7 +78,7 @@ public class InquiryService {
     @Transactional
     public Inquiry updateInquiry(String id, Inquiry inquiryUpdate) {
         logger.info("Updating inquiry: {}", id);
-        
+
         Inquiry inquiry = inquiryRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.warn("Inquiry not found for update: {}", id);
@@ -66,7 +87,7 @@ public class InquiryService {
 
         inquiry.setResolved(inquiryUpdate.isResolved());
         Inquiry updated = inquiryRepository.save(inquiry);
-        
+
         logger.info("Inquiry updated: {}", id);
         return updated;
     }
@@ -74,14 +95,14 @@ public class InquiryService {
     @Transactional
     public void deleteInquiry(String id) {
         logger.info("Deleting inquiry: {}", id);
-        
-        if (!inquiryRepository.existsById(id)) {
-    logger.warn("Inquiry not found for deletion: {}", id);
-    throw new ResourceNotFoundException("Inquiry not found");
-}
 
-inquiryRepository.deleteById(id);
-logger.info("Inquiry deleted: {}", id);
+        if (!inquiryRepository.existsById(id)) {
+            logger.warn("Inquiry not found for deletion: {}", id);
+            throw new ResourceNotFoundException("Inquiry not found");
+        }
+
+        inquiryRepository.deleteById(id);
+        logger.info("Inquiry deleted: {}", id);
 
     }
 }

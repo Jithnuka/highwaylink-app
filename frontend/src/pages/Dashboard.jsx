@@ -625,6 +625,8 @@ export default function Dashboard() {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchRidesAndUsers();
+      fetchTodayEarnings();
+      fetchTotalEarnings();
       alert("Ride ended successfully");
     } catch (err) {
       console.error(err);
@@ -727,6 +729,7 @@ export default function Dashboard() {
       destination: ride.destination || "",
       pricePerSeat: ride.pricePerSeat || 0,
       totalSeats: ride.totalSeats || 0,
+      seatsAvailable: ride.seatsAvailable || 0,
       schedule: ride.schedule || "",
       startTime: ride.startTime ? new Date(ride.startTime).toISOString() : "",
       ownerName: ownerDetails.name || ride.ownerName || "",
@@ -1087,7 +1090,7 @@ export default function Dashboard() {
                   )}
                 </>
               )}
-              {user.role === "OWNER" && isOwnerView && (
+              {user.role === "OWNER" && isOwnerView && ride.active && (
                 <button
                   onClick={() => {
                     if (ride.acceptedPassengers && ride.acceptedPassengers.length > 0) {
@@ -1314,50 +1317,6 @@ export default function Dashboard() {
             {/* ACTIVE TAB */}
             {activeTab === "active" && (
               <div className="space-y-6 animate-fadeIn">
-                {/* Today's Earnings */}
-                {!earningsLoading && todayEarnings && (
-                  <div className="bg-white shadow-2xl rounded-2xl p-6 border border-gray-100">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Today's Earnings
-                      <span className="text-sm text-gray-500 font-normal ml-2">({todayEarnings.date})</span>
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Cash Earnings */}
-                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border border-green-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-green-700 font-semibold flex items-center gap-2">
-                            Cash Collected
-                          </span>
-                        </div>
-                        <div className="text-3xl font-bold text-green-700">Rs {todayEarnings.cashEarnings.toFixed(2)}</div>
-                        <div className="text-sm text-green-600 mt-1">{todayEarnings.cashPaymentsCount} payment(s)</div>
-                      </div>
-                      {/* Card Earnings */}
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-blue-700 font-semibold flex items-center gap-2">
-                            Online Payments
-                          </span>
-                        </div>
-                        <div className="text-3xl font-bold text-blue-700">Rs {todayEarnings.cardEarnings.toFixed(2)}</div>
-                        <div className="text-sm text-blue-600 mt-1">{todayEarnings.cardPaymentsCount} payment(s)</div>
-                      </div>
-                      {/* Total Earnings */}
-                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-purple-700 font-semibold flex items-center gap-2">
-                            Total Earnings
-                          </span>
-                        </div>
-                        <div className="text-3xl font-bold text-purple-700">Rs {todayEarnings.totalEarnings.toFixed(2)}</div>
-                        <div className="text-sm text-purple-600 mt-1">{todayEarnings.cashPaymentsCount + todayEarnings.cardPaymentsCount} total payment(s)</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
                 {renderSection("🚀 Rides in Progress", inProgressRides, true)}
                 {renderSection("🚗 Upcoming Rides (My Offers)", upcomingRides, true)}
               </div>
@@ -1384,12 +1343,43 @@ export default function Dashboard() {
             {activeTab === "history" && (
               <div className="space-y-6 animate-fadeIn">
 
-                {/* Total Lifetime Earnings */}
+                {/* Combined Earnings Card - Today's + All-Time */}
                 {!earningsLoading && totalEarnings && (
                   <div className="bg-gradient-to-r from-purple-800 to-indigo-900 rounded-2xl p-6 shadow-xl text-white mb-8 relative overflow-hidden">
                     <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
                     <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-32 h-32 bg-purple-500 opacity-20 rounded-full blur-2xl"></div>
 
+                    {/* Today's Earnings Section */}
+                    {!earningsLoading && todayEarnings && (
+                      <div className="relative z-10 mb-6 pb-6 border-b border-purple-700/50">
+                        <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+                          <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Today's Earnings
+                          <span className="text-sm text-purple-300 font-normal ml-2">({todayEarnings.date})</span>
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                            <p className="text-xs text-purple-200 uppercase mb-1">Cash Collected</p>
+                            <p className="text-2xl font-bold text-green-300">Rs {todayEarnings.cashEarnings.toFixed(2)}</p>
+                            <p className="text-xs text-purple-300 mt-1">{todayEarnings.cashPaymentsCount} payment(s)</p>
+                          </div>
+                          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                            <p className="text-xs text-purple-200 uppercase mb-1">Online Payments</p>
+                            <p className="text-2xl font-bold text-blue-300">Rs {todayEarnings.cardEarnings.toFixed(2)}</p>
+                            <p className="text-xs text-purple-300 mt-1">{todayEarnings.cardPaymentsCount} payment(s)</p>
+                          </div>
+                          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                            <p className="text-xs text-purple-200 uppercase mb-1">Total Today</p>
+                            <p className="text-2xl font-bold text-yellow-300">Rs {todayEarnings.totalEarnings.toFixed(2)}</p>
+                            <p className="text-xs text-purple-300 mt-1">{todayEarnings.cashPaymentsCount + todayEarnings.cardPaymentsCount} total payment(s)</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* All-Time Earnings Section */}
                     <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
                       <div>
                         <h2 className="text-2xl font-bold flex items-center gap-2 mb-1">
@@ -1650,13 +1640,9 @@ export default function Dashboard() {
                   className="border p-3 rounded-xl w-full bg-white focus:ring-2 focus:ring-blue-400"
                   calendarClassName="datepicker-black-icon"
                 />
-                <select name="schedule" value={rideEditForm.schedule} onChange={handleRideFormChange} className="border p-3 rounded-xl bg-white focus:ring-2 focus:ring-blue-400">
-                  <option value="ONETIME">One-time</option>
-                  <option value="DAILY">Daily</option>
-                  <option value="WEEKLY">Weekly</option>
-                </select>
                 <input name="pricePerSeat" value={rideEditForm.pricePerSeat} onChange={handleRideFormChange} placeholder="Price per Seat (Rs)" type="number" className="border p-3 rounded-xl bg-white focus:ring-2 focus:ring-blue-400" />
                 <input name="totalSeats" value={rideEditForm.totalSeats} onChange={handleRideFormChange} placeholder="Total Seats" type="number" className="border p-3 rounded-xl bg-white focus:ring-2 focus:ring-blue-400" />
+                <input name="seatsAvailable" value={rideEditForm.seatsAvailable} onChange={handleRideFormChange} placeholder="Available Seats" type="number" className="border p-3 rounded-xl bg-white focus:ring-2 focus:ring-blue-400" />
 
                 <div className="md:col-span-2">
                   <h4 className="text-lg font-semibold mb-2 mt-2 text-blue-600">Owner Details</h4>
@@ -1955,8 +1941,12 @@ export default function Dashboard() {
                 <div className="grid md:grid-cols-3 gap-3">
                   <div className="p-3 bg-gray-50 rounded-lg text-center">
                     <p className="text-xs text-gray-500 mb-1">Ride Status</p>
-                    <p className={`font-bold ${ride.active ? "text-green-600" : "text-red-600"}`}>
-                      {ride.status ? "SCHEDULED" : "COMPLETED"}
+                    <p className={`font-bold ${ride.status === 'COMPLETED' ? 'text-green-600' :
+                      ride.status === 'IN_PROGRESS' ? 'text-blue-600' :
+                        ride.status === 'CANCELED' ? 'text-gray-600' :
+                          'text-yellow-600'
+                      }`}>
+                      {ride.status || "SCHEDULED"}
                     </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-lg text-center">

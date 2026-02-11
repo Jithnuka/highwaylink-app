@@ -46,16 +46,12 @@ public class AuthController {
     public ResponseEntity<LoginResponseDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
         logger.info("Signup request received for email: {}", signupRequest.getEmail());
 
-        // Convert DTO to User entity
         User user = dtoMapper.toUser(signupRequest);
 
-        // Save user (service handles validation and password encoding)
         User savedUser = authService.signup(user);
 
-        // Generate JWT token with userId
         String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole(), savedUser.getId());
 
-        // Convert to UserDTO for response
         UserDTO userDTO = dtoMapper.toUserDTO(savedUser);
 
         LoginResponseDTO response = new LoginResponseDTO(token, userDTO);
@@ -80,7 +76,6 @@ public class AuthController {
         // Get user details
         User user = userService.getUserByEmail(loginRequest.getEmail());
 
-        // Generate JWT token with userId
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getId());
 
         // Convert to UserDTO
@@ -93,4 +88,3 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 }
-

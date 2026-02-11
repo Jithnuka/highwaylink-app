@@ -297,35 +297,24 @@ export default function CreateRide() {
                 onChange={(e) => setPrice(Number(e.target.value))}
                 className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
               />
+              {distance && (
+                <p className="text-xs text-green-600 mt-1 font-medium">
+                  Recommended: Rs {Math.round(parseFloat(distance) * 50)} (based on {distance})
+                </p>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Contact No */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-1">Contact</label>
-              <input
-                required
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                placeholder="Mobile No"
-                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-              />
-            </div>
-
-            {/* Schedule */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-1">Schedule</label>
-              <select
-                value={schedule}
-                onChange={(e) => setSchedule(e.target.value)}
-                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-              >
-                <option value="ONETIME">One-time</option>
-                <option value="DAILY">Daily</option>
-                <option value="WEEKLY">Weekly</option>
-              </select>
-            </div>
+          {/* Contact No */}
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">Contact</label>
+            <input
+              required
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+              placeholder="Mobile No"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+            />
           </div>
 
           {/* Submit Button */}
