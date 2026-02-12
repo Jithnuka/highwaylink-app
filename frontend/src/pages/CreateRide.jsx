@@ -182,6 +182,12 @@ export default function CreateRide() {
       return;
     }
 
+    const contactRegex = /^0\d{9}$/;
+    if (!contactRegex.test(contact)) {
+      toast.error("Invalid contact number format. Must be 10 digits starting with 0 (e.g., 0712345678)");
+      return;
+    }
+
     const startTime = startDateTime.toISOString();
 
     try {
@@ -299,7 +305,7 @@ export default function CreateRide() {
               />
               {distance && (
                 <p className="text-xs text-green-600 mt-1 font-medium">
-                  Recommended: Rs {Math.round(parseFloat(distance) * 50)} (based on {distance})
+                  Recommended: Rs {Math.round(parseFloat(distance) * 10)} (based on {distance})
                 </p>
               )}
             </div>
