@@ -212,7 +212,7 @@ Contributions, issues, and feature requests are welcome!
 ## 📞 Contact
 
 For support or inquiries:
-- Email: jithnukaweerasingha@gmail.com 
+- Email: jithnukaweerasingha@gmail.com / admin.inquaries@highwaylink.com
 - Phone: +94 71 683 8139
 
 ---
