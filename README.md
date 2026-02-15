@@ -209,6 +209,36 @@ Submit inquiries for technical issues, booking problems, or account changes.
 
 Contributions, issues, and feature requests are welcome!
 
+### For Developers
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines, including:
+- Git workflow and commit conventions
+- How to view repository commits (multiple methods)
+- Code style guidelines
+- Testing requirements
+- Pull request process
+
+### Quick: View Repository Commits
+
+```bash
+# View all commits in one line
+git log --oneline
+
+# View last 20 commits with details
+git log -20
+
+# View commits with graph
+git log --oneline --graph --all
+
+# View commits by author
+git log --author="Your Name"
+
+# View commits for specific file
+git log -- path/to/file
+```
+
+For more detailed instructions, see the [CONTRIBUTING.md](CONTRIBUTING.md) guide.
+
 ## 📞 Contact
 
 For support or inquiries:
