@@ -6,6 +6,9 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,21 +102,18 @@ public class RideService {
         List<Ride> rides;
 
         if (origin != null && !origin.isEmpty() && destination != null && !destination.isEmpty()) {
-            rides = rideRepository.findByOriginContainingIgnoreCaseAndDestinationContainingIgnoreCase(origin,
-                    destination);
+            rides = rideRepository
+                    .findByOriginContainingIgnoreCaseAndDestinationContainingIgnoreCaseAndActiveTrueAndSeatsAvailableGreaterThan(
+                            origin,
+                            destination, 0);
         } else if (origin != null && !origin.isEmpty()) {
-            rides = rideRepository.findByOriginContainingIgnoreCase(origin);
+            rides = rideRepository.findByOriginContainingIgnoreCaseAndActiveTrueAndSeatsAvailableGreaterThan(origin, 0);
         } else if (destination != null && !destination.isEmpty()) {
-            rides = rideRepository.findByDestinationContainingIgnoreCase(destination);
+            rides = rideRepository
+                    .findByDestinationContainingIgnoreCaseAndActiveTrueAndSeatsAvailableGreaterThan(destination, 0);
         } else {
-            rides = rideRepository.findAll();
+            rides = rideRepository.findByActiveTrueAndSeatsAvailableGreaterThan(0);
         }
-
-        // Filter active rides with available seats, exclude current user's rides
-        rides = rides.stream()
-                .filter(ride -> ride.isActive() && ride.getSeatsAvailable() > 0)
-                .filter(ride -> currentUserId == null || !ride.getOwnerId().equals(currentUserId))
-                .collect(Collectors.toList());
 
         logger.info("Found {} public rides", rides.size());
         return enrichListWithOwnerRating(dtoMapper.toRideDTOList(rides));
@@ -129,14 +129,17 @@ public class RideService {
 
         // Start with basic location filtering
         if (origin != null && !origin.isEmpty() && destination != null && !destination.isEmpty()) {
-            rides = rideRepository.findByOriginContainingIgnoreCaseAndDestinationContainingIgnoreCase(origin,
-                    destination);
+            rides = rideRepository
+                    .findByOriginContainingIgnoreCaseAndDestinationContainingIgnoreCaseAndActiveTrueAndSeatsAvailableGreaterThan(
+                            origin,
+                            destination, 0);
         } else if (origin != null && !origin.isEmpty()) {
-            rides = rideRepository.findByOriginContainingIgnoreCase(origin);
+            rides = rideRepository.findByOriginContainingIgnoreCaseAndActiveTrueAndSeatsAvailableGreaterThan(origin, 0);
         } else if (destination != null && !destination.isEmpty()) {
-            rides = rideRepository.findByDestinationContainingIgnoreCase(destination);
+            rides = rideRepository
+                    .findByDestinationContainingIgnoreCaseAndActiveTrueAndSeatsAvailableGreaterThan(destination, 0);
         } else {
-            rides = rideRepository.findAll();
+            rides = rideRepository.findByActiveTrueAndSeatsAvailableGreaterThan(0);
         }
 
         // Apply additional filters
@@ -184,22 +187,23 @@ public class RideService {
                     .collect(Collectors.toList());
         }
 
-        // Exclude rides owned by current user
-        if (currentUserId != null) {
-            rides = rides.stream()
-                    .filter(ride -> !ride.getOwnerId().equals(currentUserId))
-                    .collect(Collectors.toList());
-        }
+        // Exclude rides owned by current user - REMOVED so users can see their own
+        // rides on Search results
+        // if (currentUserId != null) {
+        // rides = rides.stream()
+        // .filter(ride -> !ride.getOwnerId().equals(currentUserId))
+        // .collect(Collectors.toList());
+        // }
 
         logger.info("Search found {} rides after filtering", rides.size());
         return enrichListWithOwnerRating(dtoMapper.toRideDTOList(rides));
     }
 
-    public List<RideDTO> getAllRides() {
-        logger.info("Fetching all rides");
-        List<Ride> rides = rideRepository.findAll();
-        logger.info("Retrieved {} rides", rides.size());
-        return enrichListWithOwnerRating(dtoMapper.toRideDTOList(rides));
+    public Page<RideDTO> getAllRides(Pageable pageable) {
+        logger.info("Fetching all rides - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        Page<Ride> ridesPage = rideRepository.findAll(pageable);
+        List<RideDTO> dtos = enrichListWithOwnerRating(dtoMapper.toRideDTOList(ridesPage.getContent()));
+        return new PageImpl<>(dtos, pageable, ridesPage.getTotalElements());
     }
 
     public RideDTO getRideById(String id) {
@@ -213,6 +217,14 @@ public class RideService {
         return enrichWithOwnerRating(dtoMapper.toRideDTO(ride));
     }
 
+    public Page<RideDTO> getMyOffers(String ownerId, Pageable pageable) {
+        logger.info("Fetching rides for owner: {} - page: {}, size: {}", ownerId, pageable.getPageNumber(),
+                pageable.getPageSize());
+        Page<Ride> ridesPage = rideRepository.findByOwnerId(ownerId, pageable);
+        List<RideDTO> dtos = enrichListWithOwnerRating(dtoMapper.toRideDTOList(ridesPage.getContent()));
+        return new PageImpl<>(dtos, pageable, ridesPage.getTotalElements());
+    }
+
     public List<RideDTO> getRidesByOwnerId(String ownerId) {
         logger.info("Fetching rides for owner: {}", ownerId);
         List<Ride> rides = rideRepository.findByOwnerId(ownerId);
@@ -220,41 +232,25 @@ public class RideService {
         return enrichListWithOwnerRating(dtoMapper.toRideDTOList(rides));
     }
 
-    public MyRidesResponseDTO getMyRides(String userId) {
-        logger.info("Fetching my rides for user: {}", userId);
+    public MyRidesResponseDTO getMyRides(String userId, Pageable pageable) {
+        logger.info("Fetching my rides for user: {} - page: {}, size: {}", userId, pageable.getPageNumber(),
+                pageable.getPageSize());
 
-        List<Ride> allRides = rideRepository.findAll();
+        Page<Ride> bookedRidesPage = rideRepository.findByAcceptedPassengersContains(userId, pageable);
+        Page<Ride> pendingRidesPage = rideRepository.findByRequestsContains(userId, pageable);
+        Page<Ride> canceledRidesPage = rideRepository.findByCanceledRequestsContains(userId, pageable);
 
-        List<Ride> bookedRides = allRides.stream()
-                .filter(ride -> ride.getAcceptedPassengers() != null &&
-                        ride.getAcceptedPassengers().contains(userId))
-                .collect(Collectors.toList());
+        MyRidesResponseDTO response = new MyRidesResponseDTO();
+        response.setApprovedRides(enrichListWithOwnerRating(dtoMapper.toRideDTOList(bookedRidesPage.getContent())));
+        response.setPendingRequests(enrichListWithOwnerRating(dtoMapper.toRideDTOList(pendingRidesPage.getContent())));
+        response.setCanceledRides(enrichListWithOwnerRating(dtoMapper.toRideDTOList(canceledRidesPage.getContent())));
 
-        List<Ride> pendingRides = allRides.stream()
-                .filter(ride -> ride.getRequests() != null &&
-                        ride.getRequests().contains(userId))
-                .collect(Collectors.toList());
+        response.setTotalApproved(bookedRidesPage.getTotalElements());
+        response.setTotalPending(pendingRidesPage.getTotalElements());
+        response.setTotalCanceled(canceledRidesPage.getTotalElements());
 
-        List<Ride> canceledRides = allRides.stream()
-                .filter(ride -> ride.getCanceledRequests() != null &&
-                        ride.getCanceledRequests().contains(userId))
-                .collect(Collectors.toList());
-
-        List<RideDTO> bookedRideDTOs = enrichListWithOwnerRating(dtoMapper.toRideDTOList(bookedRides));
-        List<RideDTO> pendingRideDTOs = enrichListWithOwnerRating(dtoMapper.toRideDTOList(pendingRides));
-        List<RideDTO> canceledRideDTOs = enrichListWithOwnerRating(dtoMapper.toRideDTOList(canceledRides));
-
-        logger.info("Found {} pending, {} approved, {} canceled rides for user: {}",
-                pendingRideDTOs.size(), bookedRideDTOs.size(), canceledRideDTOs.size(), userId);
-
-        return new MyRidesResponseDTO(pendingRideDTOs, bookedRideDTOs, canceledRideDTOs);
-    }
-
-    public List<RideDTO> getMyOffers(String userId) {
-        logger.info("Fetching ride offers for user: {}", userId);
-        List<Ride> myOffers = rideRepository.findByOwnerId(userId);
-        logger.info("Found {} ride offers for user: {}", myOffers.size(), userId);
-        return enrichListWithOwnerRating(dtoMapper.toRideDTOList(myOffers));
+        logger.info("Retrieved paginated rides for user: {}", userId);
+        return response;
     }
 
     @Transactional
@@ -557,8 +553,50 @@ public class RideService {
             throw new UnauthorizedException("Only ride owner or admin can update the ride");
         }
 
-        ride.setId(id);
-        Ride updatedRide = rideRepository.save(ride);
+        // Merge fields while preserving immutable and managed lists
+        if (ride.getOrigin() != null)
+            existingRide.setOrigin(ride.getOrigin());
+        if (ride.getDestination() != null)
+            existingRide.setDestination(ride.getDestination());
+        if (ride.getStartTime() != null)
+            existingRide.setStartTime(ride.getStartTime());
+        if (ride.getPricePerSeat() > 0)
+            existingRide.setPricePerSeat(ride.getPricePerSeat());
+
+        // Handle totalSeats and seatsAvailable carefully
+        if (ride.getTotalSeats() != null && ride.getTotalSeats() > 0) {
+            existingRide.setTotalSeats(ride.getTotalSeats());
+        }
+
+        int acceptedSeats = 0;
+        if (existingRide.getBookings() != null) {
+            acceptedSeats = existingRide.getBookings().stream()
+                    .filter(b -> "APPROVED".equals(b.getStatus()))
+                    .mapToInt(b -> Math.max(1, b.getSeatsRequested()))
+                    .sum();
+        }
+        existingRide.setSeatsAvailable(existingRide.getTotalSeats() - acceptedSeats);
+
+        if (ride.getSeatsAvailable() != null && ride.getSeatsAvailable() >= 0) {
+            // Only allow override if there are no approved bookings, or if the admin
+            // intentionally sent a value.
+            // Actually, let's trust the re-calculation if bookings are present.
+            if (acceptedSeats == 0) {
+                existingRide.setSeatsAvailable(ride.getSeatsAvailable());
+            }
+        }
+
+        if (ride.getOwnerName() != null)
+            existingRide.setOwnerName(ride.getOwnerName());
+        if (ride.getOwnerContact() != null)
+            existingRide.setOwnerContact(ride.getOwnerContact());
+        if (ride.getSchedule() != null)
+            existingRide.setSchedule(ride.getSchedule());
+        if (ride.getStatus() != null)
+            existingRide.setStatus(ride.getStatus());
+
+        // Save the merged existing ride
+        Ride updatedRide = rideRepository.save(existingRide);
         logger.info("Successfully updated ride: {}", id);
         return dtoMapper.toRideDTO(updatedRide);
     }
@@ -742,33 +780,31 @@ public class RideService {
         }
 
         // Check if ride can be started based on scheduled time window
-        // Allow starting: 15 minutes before scheduled time to 30 minutes after
+        // Allow starting: exactly at scheduled time to 15 minutes after
         // scheduled time
         if (ride.getStartTime() != null) {
             java.util.Date now = new java.util.Date();
             java.util.Calendar cal = java.util.Calendar.getInstance();
 
-            // Calculate earliest allowed start time (15 minutes before scheduled time)
-            cal.setTime(ride.getStartTime());
-            cal.add(java.util.Calendar.MINUTE, -15);
-            java.util.Date earliestStartTime = cal.getTime();
+            // Calculate earliest allowed start time (Exactly at scheduled time)
+            java.util.Date earliestStartTime = ride.getStartTime();
 
-            // Calculate latest allowed start time (30 minutes after scheduled time)
+            // Calculate latest allowed start time (15 minutes after scheduled time)
             cal.setTime(ride.getStartTime());
-            cal.add(java.util.Calendar.MINUTE, 30);
+            cal.add(java.util.Calendar.MINUTE, 15);
             java.util.Date latestStartTime = cal.getTime();
 
             // Check if current time is within the allowed window
             if (now.before(earliestStartTime)) {
                 throw new BadRequestException(
-                        "Cannot start ride more than 15 minutes before the scheduled time. " +
+                        "Cannot start ride before the scheduled time. " +
                                 "Scheduled time: " + ride.getStartTime().toString() + ". " +
-                                "You can start from: " + earliestStartTime.toString());
+                                "Please wait until the scheduled time to start.");
             }
 
             if (now.after(latestStartTime)) {
                 throw new BadRequestException(
-                        "Cannot start ride more than 30 minutes after the scheduled time. " +
+                        "Cannot start ride more than 15 minutes after the scheduled time. " +
                                 "Scheduled time: " + ride.getStartTime().toString() + ". " +
                                 "Latest start time was: " + latestStartTime.toString());
             }
@@ -886,7 +922,4 @@ public class RideService {
 
         return dtoMapper.toRideDTO(savedRide);
     }
-
-    // REMOVED: rescheduleRide method - daily/weekly auto-scheduling feature removed
-    // for safety
 }

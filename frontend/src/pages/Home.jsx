@@ -16,6 +16,15 @@ export default function Home() {
   const [timeFrom, setTimeFrom] = useState("");
   const [timeTo, setTimeTo] = useState("");
   const [vehicleType, setVehicleType] = useState("");
+
+  // Helper to extract the first word from a location string
+  const cleanLocationValue = (val) => {
+    if (!val) return "";
+    // If it contains a semicolon (typical for selection strings), take the part before it
+    const preSemicolon = val.includes(";") ? val.split(";")[0] : val;
+    // Then take only the first word
+    return preSemicolon.trim().split(/\s+/)[0];
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -50,8 +59,8 @@ export default function Home() {
         if (vehicleType.trim()) params.append("vehicleType", vehicleType.trim());
         url = `/rides/search?${params.toString()}`;
       } else {
-        // Use all rides endpoint when no filters
-        url = '/rides';
+        // Use public rides endpoint when no filters for better filtering
+        url = '/rides/public';
       }
 
       const res = await api.get(url, {
@@ -64,7 +73,8 @@ export default function Home() {
       const currentTime = new Date();
       const twoHoursAgo = new Date(currentTime.getTime() - (2 * 60 * 60 * 1000));
 
-      const availableRides = (res.data || []).filter(ride =>
+      const rides = res.data?.content || res.data || [];
+      const availableRides = rides.filter(ride =>
         ride.active !== false &&
         ride.status !== "COMPLETED" &&
         ride.status !== "IN_PROGRESS" &&
@@ -119,7 +129,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 px-6 text-center">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-8 px-6 text-center">
         <h1 className="text-5xl font-extrabold mb-4">Welcome to HighwayLink</h1>
         <p className="text-xl mb-6">Find and share rides across Sri Lanka - Safe, affordable, and eco-friendly</p>
 
@@ -142,9 +152,9 @@ export default function Home() {
       </div>
 
       {/* Search Section */}
-      <div className="max-w-6xl mx-auto px-4 -mt-10">
-        <div className="bg-white/90 backdrop-blur-lg border border-white/20 shadow-2xl rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+      <div className="max-w-6xl mx-auto px-4 -mt-6">
+        <div className="bg-white/90 backdrop-blur-lg border border-white/20 shadow-2xl rounded-2xl p-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
             🔍 Search Available Rides
           </h2>
 
@@ -153,16 +163,25 @@ export default function Home() {
               type="text"
               placeholder="Origin (e.g., Colombo)"
               value={origin}
-              onChange={(e) => setOrigin(e.target.value)}
-              className="p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+              onChange={(e) => {
+                const val = e.target.value;
+                // If user pasted/selected a string with semicolon, clean it immediately
+                setOrigin(val.includes(";") ? cleanLocationValue(val) : val);
+              }}
+              onBlur={() => setOrigin(cleanLocationValue(origin))}
+              className="p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-medium"
             />
 
             <input
               type="text"
               placeholder="Destination (e.g., Kandy)"
               value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              className="p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+              onChange={(e) => {
+                const val = e.target.value;
+                setDestination(val.includes(";") ? cleanLocationValue(val) : val);
+              }}
+              onBlur={() => setDestination(cleanLocationValue(destination))}
+              className="p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-medium"
             />
 
             <input
@@ -226,7 +245,7 @@ export default function Home() {
       </div>
 
       {/* Available Rides */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-4 py-4">
         {loading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
@@ -282,7 +301,7 @@ export default function Home() {
                   try {
                     setLoading(true);
                     setError(null);
-                    const res = await api.get('/rides');
+                    const res = await api.get('/rides/public');
                     const currentTime = new Date();
                     const availableRides = (res.data || []).filter(ride =>
                       ride.active !== false &&
@@ -409,9 +428,9 @@ export default function Home() {
       </div>
 
       {/* Features Section */}
-      <div className="bg-white py-10">
+      <div className="bg-white py-6">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
+          <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
             Why Choose HighwayLink?
           </h2>
           <div className="grid md:grid-cols-3 gap-8">

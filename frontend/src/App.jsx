@@ -8,8 +8,11 @@ import CreateRide from "./pages/CreateRide";
 import RideDetails from "./pages/RideDetails";
 import InfoSupport from "./pages/InfoSupport";
 import SearchRides from "./pages/SearchRides";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { AuthContext } from "./contexts/AuthContext";
 import NavBar from "./components/NavBar";
+import Footer from "./components/Footer";
 import FloatingChatButton from "./components/FloatingChatButton";
 import { Toaster } from 'react-hot-toast';
 
@@ -28,6 +31,8 @@ export default function App() {
           <Route path="/info" element={<InfoSupport />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route
             path="/dashboard"
             element={
@@ -62,6 +67,8 @@ export default function App() {
           />
         </Routes>
       </div>
+
+      <Footer />
 
       {/* Global Toast Notifications */}
       <Toaster position="top-right" />

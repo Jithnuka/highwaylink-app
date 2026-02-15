@@ -28,8 +28,8 @@ public class Ride {
     private String destination;
     @Indexed
     private Date startTime;
-    private int seatsAvailable;
-    private int totalSeats;
+    private Integer seatsAvailable;
+    private Integer totalSeats;
     private double pricePerSeat;
     private String schedule;
     @Indexed
@@ -102,19 +102,19 @@ public class Ride {
         this.startTime = startTime;
     }
 
-    public int getSeatsAvailable() {
+    public Integer getSeatsAvailable() {
         return seatsAvailable;
     }
 
-    public void setSeatsAvailable(int seatsAvailable) {
+    public void setSeatsAvailable(Integer seatsAvailable) {
         this.seatsAvailable = seatsAvailable;
     }
 
-    public int getTotalSeats() {
+    public Integer getTotalSeats() {
         return totalSeats;
     }
 
-    public void setTotalSeats(int totalSeats) {
+    public void setTotalSeats(Integer totalSeats) {
         this.totalSeats = totalSeats;
     }
 
