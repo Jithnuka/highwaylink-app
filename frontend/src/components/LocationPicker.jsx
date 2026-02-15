@@ -57,7 +57,10 @@ export default function LocationPicker({ label, value, onChange, placeholder }) 
   const formatLocationName = (displayName) => {
     if (!displayName) return "";
     let name = displayName.split(",")[0].trim();
-    return name.replace(/\s+District$/i, "");
+    // Take part before semicolon if exists
+    name = name.includes(";") ? name.split(";")[0] : name;
+    // Take only the first word as requested
+    return name.trim().split(/\s+/)[0];
   };
 
   const handleSelectPlace = (place) => {

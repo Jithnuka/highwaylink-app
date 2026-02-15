@@ -32,6 +32,13 @@ export default function Dashboard() {
   const [rideDetails, setRideDetails] = useState({});
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
+
+  // Helper to extract the first word from a location string
+  const cleanLocationValue = (val) => {
+    if (!val) return "";
+    const preSemicolon = val.includes(";") ? val.split(";")[0] : val;
+    return preSemicolon.trim().split(/\s+/)[0];
+  };
   const [editRideId, setEditRideId] = useState(null);
   const [rideEditForm, setRideEditForm] = useState({});
   const [editUserId, setEditUserId] = useState(null);
@@ -45,6 +52,8 @@ export default function Dashboard() {
   const [userSearch, setUserSearch] = useState("");
   const [canceledRequests, setCanceledRequests] = useState([]);
   const [activeTab, setActiveTab] = useState("active"); // "active", "bookings", "history"
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
 
 
@@ -250,8 +259,8 @@ export default function Dashboard() {
     }
   };
 
-  const fetchRidesAndUsers = async () => {
-    setLoading(true);
+  const fetchRidesAndUsers = async (pageToFetch = 0, append = false) => {
+    if (pageToFetch === 0 && !append) setLoading(true);
     setError(null);
     try {
       let created = [];
@@ -266,10 +275,12 @@ export default function Dashboard() {
 
       if (user.role === "OWNER") {
         // Fetch rides created by owner
-        const createdRes = await api.get("/rides/my-offers", {
+        const createdRes = await api.get(`/rides/my-offers?page=${pageToFetch}&size=20`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const allCreated = createdRes.data || [];
+        const ridesPage = createdRes.data || {};
+        const allCreated = ridesPage.content || [];
+        setHasMore(ridesPage.totalPages > pageToFetch + 1);
 
         // Separate rides by timing and status
         const now = new Date();
@@ -292,11 +303,12 @@ export default function Dashboard() {
         pastRides = enrichedPastRides;
 
         // Fetch rides where owner is a passenger
-        const passengerRes = await api.get("/rides/my-rides", {
+        const passengerRes = await api.get(`/rides/my-rides?page=${pageToFetch}&size=20`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        requested = passengerRes.data?.pendingRequests || [];
-        const allApproved = passengerRes.data?.approvedRides || [];
+        const myRidesData = passengerRes.data || {};
+        requested = myRidesData.pendingRequests || [];
+        const allApproved = myRidesData.approvedRides || [];
         approved = allApproved.filter(r => r.status !== "COMPLETED" && r.status !== "IN_PROGRESS" && new Date(r.startTime) > new Date());
         const passengerCompleted = allApproved.filter(r => r.status === "COMPLETED");
         canceledRequests = passengerRes.data?.canceledRides || [];
@@ -311,10 +323,12 @@ export default function Dashboard() {
         completed = [...completed, ...enrichedPassengerCompleted];
 
       } else if (user.role === "ADMIN") {
-        const allRidesRes = await api.get("/rides", {
+        const allRidesRes = await api.get(`/rides?page=${pageToFetch}&size=20`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const allRides = allRidesRes.data || [];
+        const ridesPage = allRidesRes.data || {};
+        const allRides = ridesPage.content || [];
+        setHasMore(ridesPage.totalPages > pageToFetch + 1);
         created = allRides.filter(r => r.active !== false && r.status !== "COMPLETED" && r.status !== "IN_PROGRESS");
         inProgress = allRides.filter(r => r.status === "IN_PROGRESS");
         completed = allRides.filter(r => r.status === "COMPLETED");
@@ -332,11 +346,12 @@ export default function Dashboard() {
 
       } else {
         // USER role
-        const res = await api.get("/rides/my-rides", {
+        const res = await api.get(`/rides/my-rides?page=${pageToFetch}&size=20`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        requested = res.data?.pendingRequests || [];
-        const allApproved = res.data?.approvedRides || [];
+        const myRidesData = res.data || {};
+        requested = myRidesData.pendingRequests || [];
+        const allApproved = myRidesData.approvedRides || [];
         approved = allApproved.filter(r => r.status !== "COMPLETED" && r.status !== "IN_PROGRESS" && new Date(r.startTime) > new Date());
         inProgress = allApproved.filter(r => r.status === "IN_PROGRESS");
         completed = allApproved.filter(r => r.status === "COMPLETED");
@@ -348,21 +363,26 @@ export default function Dashboard() {
         inProgress = await enrichRidesWithUserDetails(inProgress);
         completed = await enrichRidesWithUserDetails(completed);
         canceledRequests = await enrichRidesWithUserDetails(canceledRequests);
+
+        const totalItems = Math.max(myRidesData.totalPending || 0, myRidesData.totalApproved || 0, myRidesData.totalCanceled || 0);
+        setHasMore(totalItems > (pageToFetch + 1) * 20);
       }
 
       const filterFn = (ride) =>
         (!origin || ride.origin.toLowerCase().includes(origin.toLowerCase())) &&
         (!destination || ride.destination.toLowerCase().includes(destination.toLowerCase()));
 
-      setCreatedRides(normalizeRides(created.filter(filterFn)));
-      setCanceledRides(normalizeRides(canceled.filter(filterFn)));
-      setCompletedRides(normalizeRides(completed.filter(filterFn)));
-      setInProgressRides(normalizeRides(inProgress.filter(filterFn)));
-      setUpcomingRides(normalizeRides(upcomingRides.filter(filterFn)));
-      setPastRides(normalizeRides(pastRides.filter(filterFn)));
-      setRequestedRides(normalizeRides(requested.filter(filterFn)));
-      setApprovedRides(normalizeRides(approved.filter(filterFn)));
-      setCanceledRequests(normalizeRides(canceledRequests.filter(filterFn)));
+      const normalizeAndAppend = (prev, next) => append ? [...prev, ...normalizeRides(next.filter(filterFn))] : normalizeRides(next.filter(filterFn));
+
+      setCreatedRides(prev => normalizeAndAppend(prev, created));
+      setCanceledRides(prev => normalizeAndAppend(prev, canceled));
+      setCompletedRides(prev => normalizeAndAppend(prev, completed));
+      setInProgressRides(prev => normalizeAndAppend(prev, inProgress));
+      setUpcomingRides(prev => normalizeAndAppend(prev, upcomingRides));
+      setPastRides(prev => normalizeAndAppend(prev, pastRides));
+      setRequestedRides(prev => normalizeAndAppend(prev, requested));
+      setApprovedRides(prev => normalizeAndAppend(prev, approved));
+      setCanceledRequests(prev => normalizeAndAppend(prev, canceledRequests));
 
       // Check which completed rides user has already reviewed
       if (completed.length > 0) {
@@ -741,6 +761,12 @@ export default function Dashboard() {
   };
 
   const handleRideFormChange = (e) => setRideEditForm({ ...rideEditForm, [e.target.name]: e.target.value });
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchRidesAndUsers(nextPage, true);
+  };
   const handleRideFormSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -855,17 +881,17 @@ export default function Dashboard() {
             {isOwnerView && !isCanceled && (
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${ride.status === "COMPLETED"
                 ? "bg-green-100 text-green-800 border border-green-200"
-                : ride.status === "SCHEDULED" && new Date(ride.startTime) > new Date()
+                : ride.status === "SCHEDULED" && new Date(new Date(ride.startTime).getTime() + 15 * 60000) > new Date()
                   ? "bg-blue-100 text-blue-800 border border-blue-200"
-                  : ride.status === "SCHEDULED" && new Date(ride.startTime) <= new Date()
+                  : ride.status === "SCHEDULED" && new Date(new Date(ride.startTime).getTime() + 15 * 60000) <= new Date()
                     ? "bg-red-100 text-red-800 border border-red-200"
                     : "bg-gray-100 text-gray-800 border border-gray-200"
                 }`}>
                 {ride.status === "COMPLETED"
                   ? "Completed"
-                  : ride.status === "SCHEDULED" && new Date(ride.startTime) > new Date()
+                  : ride.status === "SCHEDULED" && new Date(new Date(ride.startTime).getTime() + 15 * 60000) > new Date()
                     ? "Upcoming"
-                    : ride.status === "SCHEDULED" && new Date(ride.startTime) <= new Date()
+                    : ride.status === "SCHEDULED" && new Date(new Date(ride.startTime).getTime() + 15 * 60000) <= new Date()
                       ? "Uncompleted"
                       : ride.status}
               </span>
@@ -886,8 +912,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Past Uncompleted Ride Indicator */}
-        {ride.status === "SCHEDULED" && ride.active && new Date(ride.startTime) < new Date() && (
+        {/* Past Uncompleted Ride Indicator - Only show after 15-minute start window expires */}
+        {ride.status === "SCHEDULED" && ride.active && new Date(new Date(ride.startTime).getTime() + 15 * 60000) < new Date() && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -968,17 +994,27 @@ export default function Dashboard() {
               {/* Start/End Ride buttons for owner */}
               {isOwnerView && ride.active && (
                 <>
-                  {ride.status === "SCHEDULED" && new Date(ride.startTime) > new Date() && inProgressRides.length === 0 && (
+                  {/* Allow starting from exactly at scheduled time until 15 minutes after */}
+                  {ride.status === "SCHEDULED" &&
+                    new Date() >= new Date(ride.startTime) &&
+                    new Date() <= new Date(new Date(ride.startTime).getTime() + 15 * 60000) &&
+                    inProgressRides.length === 0 && (
 
-                    <button
-                      onClick={() => handleStartRide(ride.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-md flex items-center gap-1"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Start Ride
-                    </button>
+                      <button
+                        onClick={() => handleStartRide(ride.id)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-md flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Start Ride
+                      </button>
+                    )}
+                  {/* Also show Upcoming status if before start time */}
+                  {ride.status === "SCHEDULED" && new Date() < new Date(ride.startTime) && (
+                    <span className="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-200">
+                      Rides can only be started at the scheduled time
+                    </span>
                   )}
                   {ride.status === "IN_PROGRESS" && (
                     <button
@@ -1157,7 +1193,29 @@ export default function Dashboard() {
           ) : null}
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{ridesArray.map(ride => renderRideCard(ride, isOwnerView, showCancelButton))}</div>
+        <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {ridesArray.map(ride => renderRideCard(ride, isOwnerView, showCancelButton))}
+          </div>
+          {hasMore && ridesArray.length > 0 && (
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={handleLoadMore}
+                disabled={loading}
+                className="group relative flex items-center gap-2 bg-white border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-2xl font-bold transition-all duration-300 hover:bg-blue-600 hover:text-white hover:shadow-xl hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <svg className="w-5 h-5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                )}
+                {loading ? "Loading..." : "Load More Rides"}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </>
   );
@@ -1185,7 +1243,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-8 px-6">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-6 px-6">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-extrabold mb-2 flex items-center gap-3">
             <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1200,7 +1258,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto p-4">
 
         {/* Search Section */}
-        <div className="bg-white/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-6 mb-6 -mt-6 relative z-10">
+        <div className="bg-white/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-5 mb-4 -mt-4 relative z-10">
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
             <div className="p-2 bg-blue-100/50 rounded-lg">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1213,14 +1271,22 @@ export default function Dashboard() {
             <input
               placeholder="Origin (e.g., Colombo)"
               value={origin}
-              onChange={(e) => setOrigin(e.target.value)}
-              className="border border-gray-200/60 bg-white/50 p-4 rounded-xl w-full md:flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              onChange={(e) => {
+                const val = e.target.value;
+                setOrigin(val.includes(";") ? cleanLocationValue(val) : val);
+              }}
+              onBlur={() => setOrigin(cleanLocationValue(origin))}
+              className="border border-gray-200/60 bg-white/50 p-4 rounded-xl w-full md:flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500 transition font-medium"
             />
             <input
               placeholder="Destination (e.g., Matara)"
               value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              className="border border-gray-200/60 bg-white/50 p-4 rounded-xl w-full md:flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              onChange={(e) => {
+                const val = e.target.value;
+                setDestination(val.includes(";") ? cleanLocationValue(val) : val);
+              }}
+              onBlur={() => setDestination(cleanLocationValue(destination))}
+              className="border border-gray-200/60 bg-white/50 p-4 rounded-xl w-full md:flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500 transition font-medium"
             />
             <button
               onClick={handleSearch}
@@ -1247,7 +1313,7 @@ export default function Dashboard() {
 
         {/* Tab Navigation for OWNER and USER */}
         {user.role !== "ADMIN" && (
-          <div className="flex justify-center mb-10">
+          <div className="flex justify-center mb-6">
             <div className="bg-gray-100 p-1 rounded-xl inline-flex gap-2">
               <button
                 onClick={() => setActiveTab("active")}
@@ -1620,8 +1686,28 @@ export default function Dashboard() {
                 <div className="md:col-span-2">
                   <h4 className="text-lg font-semibold mb-2 text-blue-600">Route Details</h4>
                 </div>
-                <input name="origin" value={rideEditForm.origin} onChange={handleRideFormChange} placeholder="Origin" className="border p-3 rounded-xl bg-white focus:ring-2 focus:ring-blue-400" />
-                <input name="destination" value={rideEditForm.destination} onChange={handleRideFormChange} placeholder="Destination" className="border p-3 rounded-xl bg-white focus:ring-2 focus:ring-blue-400" />
+                <input
+                  name="origin"
+                  value={rideEditForm.origin}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setRideEditForm({ ...rideEditForm, origin: val.includes(";") ? cleanLocationValue(val) : val });
+                  }}
+                  onBlur={() => setRideEditForm({ ...rideEditForm, origin: cleanLocationValue(rideEditForm.origin) })}
+                  placeholder="Origin"
+                  className="border p-3 rounded-xl bg-white focus:ring-2 focus:ring-blue-400 font-medium"
+                />
+                <input
+                  name="destination"
+                  value={rideEditForm.destination}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setRideEditForm({ ...rideEditForm, destination: val.includes(";") ? cleanLocationValue(val) : val });
+                  }}
+                  onBlur={() => setRideEditForm({ ...rideEditForm, destination: cleanLocationValue(rideEditForm.destination) })}
+                  placeholder="Destination"
+                  className="border p-3 rounded-xl bg-white focus:ring-2 focus:ring-blue-400 font-medium"
+                />
 
                 <div className="md:col-span-2">
                   <h4 className="text-lg font-semibold mb-2 mt-2 text-blue-600">Schedule & Pricing</h4>

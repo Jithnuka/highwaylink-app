@@ -3,6 +3,9 @@ package com.highwaylink.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,9 +73,12 @@ public class RideController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RideDTO>> getAllRides() {
-        logger.info("GET /api/rides - Fetching all rides");
-        List<RideDTO> rides = rideService.getAllRides();
+    public ResponseEntity<Page<RideDTO>> getAllRides(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        logger.info("GET /api/rides - Fetching all rides - page: {}, size: {}", page, size);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<RideDTO> rides = rideService.getAllRides(pageable);
         return ResponseEntity.ok(rides);
     }
 
@@ -111,24 +117,32 @@ public class RideController {
     }
 
     @GetMapping("/my-rides")
-    public ResponseEntity<MyRidesResponseDTO> getMyRides(Authentication authentication) {
+    public ResponseEntity<MyRidesResponseDTO> getMyRides(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication authentication) {
         String userEmail = authentication.getName();
         String userId = userService.getUserByEmail(userEmail).getId();
 
-        logger.info("GET /api/rides/my-rides - user: {}", userId);
+        logger.info("GET /api/rides/my-rides - user: {}, page: {}, size: {}", userId, page, size);
 
-        MyRidesResponseDTO rides = rideService.getMyRides(userId);
+        Pageable pageable = PageRequest.of(page, size);
+        MyRidesResponseDTO rides = rideService.getMyRides(userId, pageable);
         return ResponseEntity.ok(rides);
     }
 
     @GetMapping("/my-offers")
-    public ResponseEntity<List<RideDTO>> getMyOffers(Authentication authentication) {
+    public ResponseEntity<Page<RideDTO>> getMyOffers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication authentication) {
         String userEmail = authentication.getName();
         String userId = userService.getUserByEmail(userEmail).getId();
 
-        logger.info("GET /api/rides/my-offers - user: {}", userId);
+        logger.info("GET /api/rides/my-offers - user: {}, page: {}, size: {}", userId, page, size);
 
-        List<RideDTO> offers = rideService.getMyOffers(userId);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<RideDTO> offers = rideService.getMyOffers(userId, pageable);
         return ResponseEntity.ok(offers);
     }
 
