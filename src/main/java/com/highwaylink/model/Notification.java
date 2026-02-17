@@ -3,14 +3,19 @@ package com.highwaylink.model;
 import java.util.Date;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+/**
+ * Notification Model
+ *
+ * Represents a notification sent to a user.
+ * Stored in MongoDB collection: "notifications"
+ */
 @Document(collection = "notifications")
 public class Notification {
     @Id
     private String id;
     private String userId;
     private String message;
-    private String type; // INFO, SUCCESS, WARNING, ERROR
+    private String type; // Type of notification (INFO, SUCCESS, WARNING, ERROR)
     private boolean isRead = false;
     private String relatedId; // rideId, etc.
     private Date createdAt = new Date();
