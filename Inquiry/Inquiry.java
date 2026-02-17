@@ -39,6 +39,5 @@ public class Inquiry {
     public void setResolved(boolean resolved) { this.resolved = resolved; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt;
-                                                      }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt;}
 }
