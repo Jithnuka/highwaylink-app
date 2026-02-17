@@ -1,12 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../api/axios';
 
+/**
+ * NotificationBell Component
+ *
+ * Displays notification bell icon with unread count.
+ * Fetches notifications from backend and allows:
+ * - Mark single notification as read
+ * - Mark all notifications as read
+ * - Real-time polling every 30 seconds
+ */
 const NotificationBell = () => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
-
+/**
+     * Fetch notifications + unread count
+     * API Calls:
+     * GET /notifications
+     * GET /notifications/unread-count
+     */
     const fetchNotifications = async () => {
         try {
             const [notifsRes, countRes] = await Promise.all([
