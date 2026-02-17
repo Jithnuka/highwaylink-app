@@ -5,10 +5,15 @@ import java.time.LocalDateTime;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+/**
+ * Inquiry model represents customer inquiries stored in MongoDB.
+ * Collection name: inquiries
+ */
+
 @Document(collection = "inquiries")
 public class Inquiry {
     @Id
-    private String _id;
+    private String _id;  
     private String userId;
     private String userName;
     private String userEmail;
@@ -17,6 +22,7 @@ public class Inquiry {
     private boolean resolved;
     private LocalDateTime createdAt;
 
+    // Getters and Setters
     public String getId() { return _id; }
     public void setId(String _id) { this._id = _id; }
 
@@ -39,5 +45,5 @@ public class Inquiry {
     public void setResolved(boolean resolved) { this.resolved = resolved; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; 
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
