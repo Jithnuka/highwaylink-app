@@ -20,6 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.highwaylink.model.Inquiry;
 import com.highwaylink.service.InquiryService;
 
+/**
+ * InquiryController
+ *
+ * REST APIs for managing user inquiries.
+ * Base URL: /api/inquiries
+ */
+
 @RestController
 @RequestMapping("/api/inquiries")
 @CrossOrigin(origins = "*") // Allows cross-origin requests (frontend integration)
@@ -31,6 +38,17 @@ public class InquiryController {
     @Autowired
     private InquiryService inquiryService;
 
+     /**
+     * -----------------------------------------
+     * API: Create Inquiry
+     * Method: POST
+     * URL: /api/inquiries
+     *
+     * Request Body: Inquiry JSON object
+     * Response: Created Inquiry object
+     * -----------------------------------------
+     */
+     
     @PostMapping
     public ResponseEntity<Inquiry> createInquiry(@RequestBody Inquiry inquiry) {
         logger.info("POST /api/inquiries - Creating inquiry");
@@ -38,12 +56,32 @@ public class InquiryController {
         return ResponseEntity.ok(saved);
     }
 
+      /**
+     * -----------------------------------------
+     * API: Get All Inquiries
+     * Method: GET
+     * URL: /api/inquiries
+     *
+     * Response: List<Inquiry>
+     * -----------------------------------------
+     */
     @GetMapping
     public ResponseEntity<List<Inquiry>> getAllInquiries() {
         logger.info("GET /api/inquiries - Fetching all inquiries");
         List<Inquiry> inquiries = inquiryService.getAllInquiries();
         return ResponseEntity.ok(inquiries);
     }
+
+      /**
+     * -----------------------------------------
+     * API: Get Inquiries by User Email
+     * Method: GET
+     * URL: /api/inquiries/user/{email}
+     *
+     * Path Variable: email (String)
+     * Response: List<Inquiry>
+     * -----------------------------------------
+     */
 
     @GetMapping("/user/{email}")
     public ResponseEntity<List<Inquiry>> getInquiriesByUserEmail(@PathVariable String email) {
@@ -58,6 +96,10 @@ public class InquiryController {
         Inquiry inquiry = inquiryService.getInquiryById(id);
         return ResponseEntity.ok(inquiry);
     }
+        /**
+     * Update an existing inquiry
+     * PUT /api/inquiries/{id}
+     */
 
     @PutMapping("/{id}")
     public ResponseEntity<Inquiry> updateInquiry(
@@ -67,7 +109,10 @@ public class InquiryController {
         Inquiry updated = inquiryService.updateInquiry(id, inquiryUpdate);
         return ResponseEntity.ok(updated);
     }
-
+    /**
+     * Delete an inquiry by ID
+     * DELETE /api/inquiries/{id}
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteInquiry(@PathVariable String id) {
         logger.info("DELETE /api/inquiries/{} - Deleting inquiry", id);
