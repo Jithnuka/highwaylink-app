@@ -310,14 +310,19 @@ export default function Dashboard() {
         requested = myRidesData.pendingRequests || [];
         const allApproved = myRidesData.approvedRides || [];
         approved = allApproved.filter(r => r.status !== "COMPLETED" && r.status !== "IN_PROGRESS" && new Date(r.startTime) > new Date());
+        const passengerInProgress = allApproved.filter(r => r.status === "IN_PROGRESS");
         const passengerCompleted = allApproved.filter(r => r.status === "COMPLETED");
         canceledRequests = passengerRes.data?.canceledRides || [];
 
         // Enrich passenger rides with user details
         requested = await enrichRidesWithUserDetails(requested);
         approved = await enrichRidesWithUserDetails(approved);
+        const enrichedPassengerInProgress = await enrichRidesWithUserDetails(passengerInProgress);
         const enrichedPassengerCompleted = await enrichRidesWithUserDetails(passengerCompleted);
         canceledRequests = await enrichRidesWithUserDetails(canceledRequests);
+
+        // Combine in-progress rides from both created and passenger rides
+        inProgress = [...inProgress, ...enrichedPassengerInProgress];
 
         // Combine completed rides from both created and passenger rides
         completed = [...completed, ...enrichedPassengerCompleted];
@@ -1383,7 +1388,7 @@ export default function Dashboard() {
             {/* ACTIVE TAB */}
             {activeTab === "active" && (
               <div className="space-y-6 animate-fadeIn">
-                {renderSection("🚀 Rides in Progress", inProgressRides, true)}
+                {renderSection("🚀 Rides in Progress", inProgressRides.filter(r => r.ownerId === user.id), true)}
                 {renderSection("🚗 Upcoming Rides (My Offers)", upcomingRides, true)}
               </div>
             )}
@@ -1400,8 +1405,10 @@ export default function Dashboard() {
                     These are rides you are taking as a <strong>passenger</strong>.
                   </p>
                 </div>
+                {renderSection("� Rides in Progress", inProgressRides.filter(r => r.ownerId !== user.id), false, true)}
                 {renderSection("📝 Requested Rides", requestedRides, false, true)}
-                {renderSection(" Approved Rides", approvedRides)}
+                {renderSection("✅ Approved Rides", approvedRides)}
+                {renderSection("✔️ Completed Rides", completedRides.filter(r => r.ownerId !== user.id))}
               </div>
             )}
 
