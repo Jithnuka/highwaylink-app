@@ -11,7 +11,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.highwaylink.exception.ResourceNotFoundException;
 import com.highwaylink.model.Inquiry;
 import com.highwaylink.repository.InquiryRepository;
-
+/**
+ * InquiryService
+ *
+ * Service layer responsible for handling business logic
+ * related to Inquiry operations.
+ *
+ * Communicates between Controller and Repository layers.
+ */
 @Service
 public class InquiryService {
 
@@ -19,10 +26,14 @@ public class InquiryService {
 
     @Autowired
     private InquiryRepository inquiryRepository;
-
+/**
+     * -----------------------------------------
+     * Create a new inquiry
+     **/
     @Transactional
     public Inquiry createInquiry(Inquiry inquiry) {
         logger.info("Creating inquiry from user: {}", inquiry.getUserEmail());
+        // Set creation timestamp if not already set
         if (inquiry.getCreatedAt() == null) {
             inquiry.setCreatedAt(java.time.LocalDateTime.now());
         }
@@ -30,7 +41,13 @@ public class InquiryService {
         logger.info("Inquiry created with id: {}", saved.getId());
         return saved;
     }
-
+ /**
+     * -----------------------------------------
+     * Retrieve all inquiries
+     *
+     * @return List of all inquiries
+     * -----------------------------------------
+     */
     public List<Inquiry> getAllInquiries() {
         logger.info("Fetching all inquiries");
         List<Inquiry> inquiries = inquiryRepository.findAll();
@@ -53,7 +70,10 @@ public class InquiryService {
                     return new ResourceNotFoundException("Inquiry not found");
                 });
     }
-
+/**
+     * -----------------------------------------
+     * Update inquiry status (resolved field)
+     **/
     @Transactional
     public Inquiry updateInquiry(String id, Inquiry inquiryUpdate) {
         logger.info("Updating inquiry: {}", id);
@@ -63,7 +83,7 @@ public class InquiryService {
                     logger.warn("Inquiry not found for update: {}", id);
                     return new ResourceNotFoundException("Inquiry not found");
                 });
-
+ // Only updating resolved status
         inquiry.setResolved(inquiryUpdate.isResolved());
         Inquiry updated = inquiryRepository.save(inquiry);
         
