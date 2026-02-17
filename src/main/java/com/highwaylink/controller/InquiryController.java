@@ -22,11 +22,12 @@ import com.highwaylink.service.InquiryService;
 
 @RestController
 @RequestMapping("/api/inquiries")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Allows cross-origin requests (frontend integration)
 public class InquiryController {
-
+     // Logger for tracking API activity
     private static final Logger logger = LoggerFactory.getLogger(InquiryController.class);
 
+     // Service layer dependency
     @Autowired
     private InquiryService inquiryService;
 
