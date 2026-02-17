@@ -1,16 +1,24 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "../api/axios";
 import { AuthContext } from "../contexts/AuthContext";
-
+/**
+ * MyInquiries Component
+ *
+ * Displays logged-in user's support inquiries.
+ * Fetches data from backend API and renders inquiry cards.
+ */
 function MyInquiries() {
-  const { user } = useContext(AuthContext);
-  const [inquiries, setInquiries] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useContext(AuthContext); // Get authenticated user from context
+  const [inquiries, setInquiries] = useState([]);// State to store inquiries list
+  const [loading, setLoading] = useState(true);  // Loading state for API call
 
   useEffect(() => {
     fetchInquiries();
   }, [user]);
 
+  /**
+   * Fetch user inquiries from backend
+   */
   const fetchInquiries = async () => {
     if (!user) return;
 
@@ -27,7 +35,9 @@ function MyInquiries() {
       setLoading(false);
     }
   };
-
+/**
+   * Loading State UI
+   */
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8 bg-white rounded-2xl shadow-md">
