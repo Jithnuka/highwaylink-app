@@ -6,8 +6,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Inquiry model represents customer inquiries stored in MongoDB.
- * Collection name: inquiries
+ * Inquiry model class
+ * Represents an inquiry submitted by a user.
+ * Stored in MongoDB collection: "inquiries"
  */
 
 @Document(collection = "inquiries")
